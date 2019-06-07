@@ -4,7 +4,8 @@ import glob
 import numpy as np
 import random
 import re
-from NN_Model import createNeuralNetworkModel
+from keras_model import createNeuralNetworkModel
+# from NN_Model import createNeuralNetworkModel
 from Env import runSimulation, runSimulation_input, activitySequence, activity
 from openpyxl import Workbook
 from openpyxl.styles import Border, Alignment, Side
@@ -26,7 +27,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData = 1000
+numberOfSimulationRunsToGenerateData = 2
 numberOfSimulationRunsToTestPolicy = 1
 
 # train parameters
@@ -164,8 +165,12 @@ for i in range(numberOfFilesTrain):
     for currentStateActionPair in currentRunSimulation_output.stateActionPairsOfBestRun:
         states.append(currentStateActionPair.state)
         actions.append(currentStateActionPair.action)
-
-
+    # print('states:',states)
+    # print(len(states[0]))
+    # print('##############################################################################################################################################')
+    # print('actions:',actions)
+    # print(states[0])
+    # print(actions[0])
 
 
 ####  TRAIN MODEL USING TRAINING DATA  ####
@@ -176,11 +181,17 @@ if importExistingNeuralNetworkModel:
     if neuralNetworkModelAlreadyExists:
         print("import neural network model exists")
     else:
-        neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+        #neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+        neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]))
 else:
-    neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+    #neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+    neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]))
 
-neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500, show_metric=True, run_id="trainNeuralNetworkModel")
+states_keras = np.reshape(states,(-1, len(states[0])))
+actions_keras = np.reshape(actions,(-1, len(actions[0])))
+
+# neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500, show_metric=True, run_id="trainNeuralNetworkModel")
+neuralNetworkModel.fit( states_keras, actions_keras, epochs=numberOfEpochs)
 
 ####  CREATE BENCHMARK WITH RANDOM DECISIONS ALSO WITH TEST ACTIVITY SEQUENCES  ####
 for i in range(numberOfFilesTest):
@@ -300,6 +311,10 @@ ws['H1'] = 'train policy'
 ws['K1'] = 'test Solution random'
 ws['O1'] = 'test policy'
 ws['A3'] = 'computation time'
+ws['Q1'] = 'sumTotalDurationRandomTrain'
+ws['R1'] = 'sumTotalDurationWithNeuralNetworkModelTrain'
+ws['S1'] = 'sumTotalDurationRandomTest'
+ws['T1'] = 'sumTotalDurationWithNeuralNetworkModelTest'
 
 #Train data
 ws['D2'] = 'E[T]'
@@ -355,9 +370,14 @@ for i in range(numberOfFilesTest):
     # using NN_Model results
     ws.cell(row=i + 3, column=15).value = activitySequences[indexFilesTest[i]].totalDurationWithPolicy
 
+ws.cell(row=2, column=17).value = sumTotalDurationRandomTrain
+ws.cell(row=2, column=18).value = sumTotalDurationWithNeuralNetworkModelTrain
+ws.cell(row=2, column=19).value = sumTotalDurationRandomTest
+ws.cell(row=2, column=20).value = sumTotalDurationWithNeuralNetworkModelTest
+
 ws.cell(row=4, column=1).value = round(t_computation,2)
 
-wb.save(relativePath + "/database/Benchmark.xlsx")
+wb.save(relativePath + "/database/Benchmark3.xlsx")
 
 
 #name
