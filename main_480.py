@@ -26,7 +26,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData = 1000
+numberOfSimulationRunsToGenerateData = 10000
 numberOfSimulationRunsToTestPolicy = 1
 
 # train parameters
@@ -39,7 +39,7 @@ learningRate = 0.001
 relativePath = os.path.dirname(__file__)
 # absolutePathProjects = relativePath + "/RG30_merged/"
 absolutePathProjects = relativePath + "/J30/"
-absolutePathExcelOutput = relativePath + "/database_480/tflearn_1000.xlsx"
+
 
 # other parameters
 np.set_printoptions(precision=4)    # print precision of numpy variables
@@ -192,7 +192,7 @@ else:
 # actions_keras = np.reshape(actions,(-1, len(actions[0])))
 # history = LossHistory
 
-neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500, show_metric=True)
+neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500, batch_size=32,show_metric=True)
 # neuralNetworkModel.fit( states_keras, actions_keras, epochs=numberOfEpochs,callbacks=[history])
 
 ####  CREATE BENCHMARK WITH RANDOM DECISIONS ALSO WITH TEST ACTIVITY SEQUENCES  ####
@@ -292,5 +292,95 @@ print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWith
 t_end = time.time()
 t_computation = t_end - t_start
 print("t_computation = " + str(t_computation))
+
+
+#write ouput to excel
+wb = Workbook()
+ws = wb.create_sheet('J30_duration',0)
+
+#combine rows
+ws.merge_cells('A1:B1')
+ws.merge_cells('D1:G1')
+ws.merge_cells('K1:N1')
+
+#name it
+ws['A1'] = 'number of simulation runs'
+# ws['A2'] = 'Prob[number of ready to start activity]'
+ws['B2'] = 'train Topology name'
+ws['J2'] = 'test Topology name'
+ws['C1'] = numberOfSimulationRunsToGenerateData
+ws['D1'] = 'train Solution random'
+ws['H1'] = 'train policy'
+ws['K1'] = 'test Solution random'
+ws['O1'] = 'test policy'
+ws['A3'] = 'computation time'
+ws['Q1'] = 'sumTotalDurationRandomTrain'
+ws['R1'] = 'sumTotalDurationWithNeuralNetworkModelTrain'
+ws['S1'] = 'sumTotalDurationRandomTest'
+ws['T1'] = 'sumTotalDurationWithNeuralNetworkModelTest'
+
+#Train data
+ws['D2'] = 'E[T]'
+ws['E2'] = 'StDev[T]'
+ws['F2'] = 'Min[T]'
+ws['G2'] = 'Max[T]'
+ws['H2'] = '[T]'
+
+#Test data
+ws['K2'] = 'E[T]'
+ws['L2'] = 'StDev[T]'
+ws['M2'] = 'Min[T]'
+ws['N2'] = 'Max[T]'
+ws['O2'] = '[T]'
+
+
+
+#change column width and height
+ws.column_dimensions['A'].width = 17.0
+ws.column_dimensions['B'].width = 11.0
+ws.column_dimensions['J'].width = 11.0
+ws.column_dimensions['H'].width = 11.0
+ws.column_dimensions['O'].width = 11.0
+ws.row_dimensions[2].height = 45
+#
+#alignment can be accessed only per cell
+align = Alignment(horizontal='center',vertical='center',wrap_text=True)
+ws['D1'].alignment = align
+ws['K1'].alignment = align
+ws['H1'].alignment = align
+ws['O1'].alignment = align
+for item in ws['A2:O2'][0]:
+    item.alignment = align
+
+
+# ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+3, column=1).value = "computation time"
+# ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+4, column=1).value = t_computation
+for i in range(numberOfFilesTrain):
+    ws.cell(row=i+3, column=2).value = activitySequences[indexFilesTrain[i]].fileName[:-4]
+    ws.cell(row=i+3, column=4).value = activitySequences[indexFilesTrain[i]].totalDurationMean
+    ws.cell(row=i+3, column=5).value = activitySequences[indexFilesTrain[i]].totalDurationStandardDeviation
+    ws.cell(row=i+3, column=6).value = activitySequences[indexFilesTrain[i]].totalDurationMin
+    ws.cell(row=i+3, column=7).value = activitySequences[indexFilesTrain[i]].totalDurationMax
+    #using NN_Model results
+    ws.cell(row=i + 3, column=8).value = activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
+
+for i in range(numberOfFilesTest):
+    ws.cell(row=i + 3, column=10).value = activitySequences[indexFilesTest[i]].fileName[:-4]
+    ws.cell(row=i + 3, column=11).value = activitySequences[indexFilesTest[i]].totalDurationMean
+    ws.cell(row=i + 3, column=12).value = activitySequences[indexFilesTest[i]].totalDurationStandardDeviation
+    ws.cell(row=i + 3, column=13).value = activitySequences[indexFilesTest[i]].totalDurationMin
+    ws.cell(row=i + 3, column=14).value = activitySequences[indexFilesTest[i]].totalDurationMax
+    # using NN_Model results
+    ws.cell(row=i + 3, column=15).value = activitySequences[indexFilesTest[i]].totalDurationWithPolicy
+
+ws.cell(row=2, column=17).value = sumTotalDurationRandomTrain
+ws.cell(row=2, column=18).value = sumTotalDurationWithNeuralNetworkModelTrain
+ws.cell(row=2, column=19).value = sumTotalDurationRandomTest
+ws.cell(row=2, column=20).value = sumTotalDurationWithNeuralNetworkModelTest
+
+ws.cell(row=4, column=1).value = round(t_computation,2)
+
+wb.save(relativePath + "/database_480/tflearn_10000.xlsx")
+
 
 
