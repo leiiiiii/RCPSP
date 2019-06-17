@@ -192,7 +192,7 @@ else:
 # actions_keras = np.reshape(actions,(-1, len(actions[0])))
 # history = LossHistory
 
-neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500, batch_size=32,show_metric=True)
+neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True)
 # neuralNetworkModel.fit( states_keras, actions_keras, epochs=numberOfEpochs,callbacks=[history])
 
 ####  CREATE BENCHMARK WITH RANDOM DECISIONS ALSO WITH TEST ACTIVITY SEQUENCES  ####
@@ -380,7 +380,7 @@ ws.cell(row=2, column=20).value = sumTotalDurationWithNeuralNetworkModelTest
 
 ws.cell(row=4, column=1).value = round(t_computation,2)
 
-wb.save(relativePath + "/database_480/tflearn_10000.xlsx")
+wb.save(relativePath + "/database_480/tflearn_10000_batchsize_64.xlsx")
 
 
 
