@@ -9,6 +9,7 @@ def powerset(listOfElements):
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
 
 class activitySequence:
+
     def __init__(self):
         # static (do not change during simulation)
         self.index = None
@@ -18,6 +19,7 @@ class activitySequence:
         self.numberOfActivities = None
         self.activities = []
         self.indexStartActivities = []
+
         # dynamic (change during simulation)
         self.availableResources = []
         self.totalDurationMean = None
@@ -28,7 +30,9 @@ class activitySequence:
         self.totalDurationWithPolicy = None
         self.trivialDecisionPercentageMean = None
 
+
 class activity:
+
     def __init__(self):
         # static (do not change during simulation)
         self.index = None
@@ -36,6 +40,7 @@ class activity:
         self.requiredResources = []
         self.numberOfPreviousActivities = 0
         self.indexFollowingActivities = []
+
         # dynamic (change during simulation)
         self.withToken = None
         self.idleToken = None
@@ -94,9 +99,11 @@ def runSimulation(runSimulation_input):
     rescaleFactorTime = runSimulation_input.rescaleFactorTime
     numberOfActivities = runSimulation_input.numberOfActivities
 
+    # the serial number of topology
     currentActivitySequence = activitySequences[currentIndexActivitySequence]
 
     print("start " + str(currentActivitySequence.fileName[:-4]))
+    print('------------------------------------------------------------------------------------------')
 
     # reset variables for the series of runs
     indexSimulationRun = 0
@@ -105,15 +112,18 @@ def runSimulation(runSimulation_input):
     luckFactors = []
     trivialDecisionPercentages = []
     stateActionPairsOfRuns = []
+
     while indexSimulationRun < numberOfSimulationRuns:
         # reset variables for run
         sumActivityDuration = 0
         step = 0
         numberOfDecisions = 0
         numberOfTrivialDecisions = 0
+
         # reset lists for run
         if purpose == "generateData":
             currentStateActionPairsOfRun = []
+
         # reset dynamic variables of classes for run
         currentActivitySequence.availableResources = currentActivitySequence.totalResources[:]
         currentActivitySequence.virtualTime = 0
@@ -148,6 +158,7 @@ def runSimulation(runSimulation_input):
                             break
                     if enoughResourcesAreAvailable:
                         indexReadyToStartActivities.append(i)
+            #print('indexReadyToStartActivities',indexReadyToStartActivities)
 
             # 1.2 check if the decision is trivial
             trivialDecision = True
@@ -177,6 +188,9 @@ def runSimulation(runSimulation_input):
                         feasibleCombinedDecisions_indexActivity.append(currentDecision)
             if len(feasibleCombinedDecisions_indexActivity) > 1:
                 trivialDecision = False
+                #print('trivialDecision',trivialDecision)
+
+
 
             numberOfDecisions += 1
             if trivialDecision:
@@ -187,6 +201,8 @@ def runSimulation(runSimulation_input):
             activityConversionVector = [-1] * numberOfActivitiesInStateVector
             activityScores = []
             indexReadyToStartActivitiesInState = indexReadyToStartActivities[0:min(numberOfActivitiesInStateVector, len(indexReadyToStartActivities))]
+            #print('indexReadyToStartActivitiesInState',indexReadyToStartActivitiesInState)
+
             if trivialDecision:
                 # no conversion needed
                 resourceConversionVector = list(range(0,numberOfResources))
@@ -199,32 +215,46 @@ def runSimulation(runSimulation_input):
                 for i in indexReadyToStartActivities:
                     for j in range(numberOfResources):
                         resourceNeedForReadyToStartActivities[j] += currentActivitySequence.activities[i].requiredResources[j] / currentActivitySequence.totalResources[j]
+                        # print('resourceNeedForReadyToStartActivities',resourceNeedForReadyToStartActivities)
+
                 # create resourceConversionVector
                 indexResourcesGlobal = list(range(0,numberOfResources))
                 indexResourcesGlobal_reordered = [x for _, x in sorted(zip(resourceNeedForReadyToStartActivities, indexResourcesGlobal), reverse=True)]
                 resourceConversionVector = indexResourcesGlobal_reordered
+                #print('resourceConversionVector',resourceConversionVector)
+
                 # reorder activities depending on resource utilisation
                 activityScores = [-1] * numberOfActivitiesInStateVector
+
                 for i in range(len(indexReadyToStartActivitiesInState)):
                     for j in range(len(resourceConversionVector)):
                         resourceMultiplicator = 100 ** (numberOfResources-j-1)
+                        #print('resourceMultiplicator',resourceMultiplicator)
                         resourceQuantity = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].requiredResources[resourceConversionVector[j]]
                         activityScores[i] += 1 + resourceMultiplicator * resourceQuantity
+                        #print('activityScores',activityScores)
 
                 indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
                 indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
                 indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(activityScores, indexActivitiesGlobal), reverse=True)]
                 activityConversionVector = indexActivitiesGlobal_reordered
+                #print('activityConversionVector',activityConversionVector)
+
 
             # 1.4 normalized state vector and matrix are created
             currentState_readyToStartActivities = []
+
             if trivialDecision == False:
                 currentState_readyToStartActivities = np.zeros([stateVectorLength])
+
                 for i, indexActivity in enumerate(activityConversionVector):
+
                     if indexActivity != -1:
                         currentState_readyToStartActivities[0+i*(1+numberOfResources)] = currentActivitySequence.activities[indexActivity].time * rescaleFactorTime
+
                         for j in range(numberOfResources):
                             currentState_readyToStartActivities[1 + j + i * (1 + numberOfResources)] = currentActivitySequence.activities[indexActivity].requiredResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
+
                 for j in range(numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
             # (optional: add information about the future resource utilisation)
@@ -233,17 +263,25 @@ def runSimulation(runSimulation_input):
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
             randomDecisionAtThisStep = (random.random() < randomDecisionProbability)
+
+
             if trivialDecision:    # if the decision is trivial, it does not matter how the priority values are assigned
                 randomDecisionAtThisStep = True
+
             if randomDecisionAtThisStep:
                 priorityValues = np.random.rand(numberOfActivitiesInStateVector)
+
             else:
                 if policyType == "neuralNetworkModel":
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
+                    #print('currentState_readyToStartActivities:',currentState_readyToStartActivities)
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
+                    #print('outputNeuralNetworkModel:',outputNeuralNetworkModel)
                     priorityValues = np.zeros(numberOfActivitiesInStateVector)
                     for i in range(len(outputNeuralNetworkModel)):
-                        priorityValues[i] = outputNeuralNetworkModel[0,i]
+                        # priorityValues[i] = outputNeuralNetworkModel[0,i]
+                        priorityValues = outputNeuralNetworkModel[0]
+                        #print('priorityValues:',priorityValues)
                 elif policyType == "otherPolicy1":
                     print("generate priority values with other policy 1")
                 elif policyType == "otherPolicy2":
@@ -253,6 +291,7 @@ def runSimulation(runSimulation_input):
 
             # reorder list according to priority
             decisions_indexActivity_reordered = [x for _, x in sorted(zip(priorityValues,decisions_indexActivity), reverse=True)]
+            #print('decisions_indexActivity_reordered)',decisions_indexActivity_reordered)
 
             # use the priority values to start new activities
             currentAction = np.zeros([numberOfActivitiesInStateVector])
@@ -260,6 +299,7 @@ def runSimulation(runSimulation_input):
             # consider the decision one by one in reordered list
             for indexActivityToStartLocal in decisions_indexActivity_reordered:
                 indexActivityToStartGlobal = activityConversionVector[indexActivityToStartLocal]
+                # print('indexActivityToStartGlobal',indexActivityToStartGlobal)
                 if indexActivityToStartGlobal != -1:
                     currentActivity = currentActivitySequence.activities[indexActivityToStartGlobal]
                     if currentActivity.withToken and currentActivity.idleToken and currentActivity.numberOfCompletedPreviousActivities == currentActivity.numberOfPreviousActivities:
@@ -285,12 +325,16 @@ def runSimulation(runSimulation_input):
                             # update the action vector with the activity that has been just started
                             currentAction[indexActivityToStartLocal] = 1
                             indexStartedActivities.append(indexActivityToStartGlobal)
+            #print('currentaction',currentAction)
 
             # 1.8 if the purpose is to generate training data, save the current state action pair
             if purpose == "generateData" and trivialDecision == False:
+                print('generateData_trivialDecision')
                 currentStateActionPair = stateActionPair()
                 currentStateActionPair.state = currentState_readyToStartActivities
+                print('currentState_readyToStartActivities',currentState_readyToStartActivities)
                 currentStateActionPair.action = currentAction
+                print('currentAction',currentAction)
                 currentStateActionPairsOfRun.append(currentStateActionPair)
 
             ## STEP 2 ##
@@ -302,6 +346,7 @@ def runSimulation(runSimulation_input):
                     indexActiveActivities.append(i)
                     if currentActivitySequence.activities[i].remainingTime < smallestRemainingTime:
                         smallestRemainingTime = currentActivitySequence.activities[i].remainingTime
+
             # 2.2 find next finishing activities
             indexNextFinishingActivities = []
             for i in indexActiveActivities:
@@ -375,9 +420,10 @@ def runSimulation(runSimulation_input):
     # submit the stateActionPairs of the best run, if the standard deviation of the duration is not zero
     if purpose == "generateData":
         if totalDurationStDev != 0:
-            indexBestRun = totalDurations.index(totalDurationMax)
+            indexBestRun = totalDurations.index(totalDurationMin)
             currentRunSimulation_output.stateActionPairsOfBestRun = stateActionPairsOfRuns[indexBestRun]
 
     print("end " + str(currentActivitySequence.fileName[:-4]))
+    print('-------------------------------------------------------------')
 
     return currentRunSimulation_output
