@@ -404,7 +404,7 @@ print("t_computation = " + str(t_computation))
 #
 # ws.cell(row=4, column=1).value = round(t_computation,2)
 #
-# wb.save(relativePath + "/database_480/tflearn_10000_batchsize_64.xlsx")
+# wb.save(relativePath + "/database_480/tflearn_10000_batchsize_32.xlsx")
 
 
 
