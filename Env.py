@@ -103,7 +103,7 @@ def runSimulation(runSimulation_input):
     currentActivitySequence = activitySequences[currentIndexActivitySequence]
 
     print("start " + str(currentActivitySequence.fileName[:-4]))
-    print('------------------------------------------------------------------------------------------')
+    #print('------------------------------------------------------------------------------------------')
 
     # reset variables for the series of runs
     indexSimulationRun = 0
@@ -150,7 +150,7 @@ def runSimulation(runSimulation_input):
             indexReadyToStartActivities = []
             for i, currentActivity in enumerate(currentActivitySequence.activities):
                 if (currentActivity.withToken and currentActivity.idleToken and currentActivity.numberOfCompletedPreviousActivities == currentActivity.numberOfPreviousActivities):
-                    # verify that enough resources are available to start
+                    # verify that enough resources are available for every ready to start activity
                     enoughResourcesAreAvailable = True
                     for j in range(numberOfResources):
                         if currentActivity.requiredResources[j] > currentActivitySequence.availableResources[j]:
@@ -188,13 +188,12 @@ def runSimulation(runSimulation_input):
                         feasibleCombinedDecisions_indexActivity.append(currentDecision)
             if len(feasibleCombinedDecisions_indexActivity) > 1:
                 trivialDecision = False
-                #print('trivialDecision',trivialDecision)
-
-
+                #print('not trivialDecision')
 
             numberOfDecisions += 1
             if trivialDecision:
                 numberOfTrivialDecisions +=1
+                #print('numberOfTrivialDecisions',numberOfTrivialDecisions)
 
             # 1.3 define activity conversion vector and resource conversion vector
             # initialise activityConversionVector and ResourceConversionVector
@@ -263,6 +262,7 @@ def runSimulation(runSimulation_input):
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
             randomDecisionAtThisStep = (random.random() < randomDecisionProbability)
+            #print('randomDecisionAtThisStep',randomDecisionAtThisStep)
 
 
             if trivialDecision:    # if the decision is trivial, it does not matter how the priority values are assigned
@@ -270,6 +270,7 @@ def runSimulation(runSimulation_input):
 
             if randomDecisionAtThisStep:
                 priorityValues = np.random.rand(numberOfActivitiesInStateVector)
+                # print('randomDecisionAtThisStep')
 
             else:
                 if policyType == "neuralNetworkModel":
@@ -289,9 +290,15 @@ def runSimulation(runSimulation_input):
                 else:
                     print("policy name not existing")
 
+
+
             # reorder list according to priority
             decisions_indexActivity_reordered = [x for _, x in sorted(zip(priorityValues,decisions_indexActivity), reverse=True)]
             #print('decisions_indexActivity_reordered)',decisions_indexActivity_reordered)
+
+            # if not randomDecisionAtThisStep:
+            #     print('not randomdecision##############################################################################################')
+            #     print('decisions_indexActivity_reordered',decisions_indexActivity_reordered)
 
             # use the priority values to start new activities
             currentAction = np.zeros([numberOfActivitiesInStateVector])
@@ -299,16 +306,20 @@ def runSimulation(runSimulation_input):
             # consider the decision one by one in reordered list
             for indexActivityToStartLocal in decisions_indexActivity_reordered:
                 indexActivityToStartGlobal = activityConversionVector[indexActivityToStartLocal]
-                # print('indexActivityToStartGlobal',indexActivityToStartGlobal)
+                #print('indexActivityToStartGlobal',indexActivityToStartGlobal)
+
                 if indexActivityToStartGlobal != -1:
                     currentActivity = currentActivitySequence.activities[indexActivityToStartGlobal]
+
                     if currentActivity.withToken and currentActivity.idleToken and currentActivity.numberOfCompletedPreviousActivities == currentActivity.numberOfPreviousActivities:
                         # verify that enough resources are available to start
                         enoughResourcesAreAvailable = True
+
                         for i in range(numberOfResources):
                             if currentActivity.requiredResources[i] > currentActivitySequence.availableResources[i]:
                                 enoughResourcesAreAvailable = False
                                 break
+
                         if enoughResourcesAreAvailable:
                             currentActivitySequence.activities[indexActivityToStartGlobal].idleToken = False
 
@@ -325,17 +336,19 @@ def runSimulation(runSimulation_input):
                             # update the action vector with the activity that has been just started
                             currentAction[indexActivityToStartLocal] = 1
                             indexStartedActivities.append(indexActivityToStartGlobal)
+
             #print('currentaction',currentAction)
+
 
             # 1.8 if the purpose is to generate training data, save the current state action pair
             if purpose == "generateData" and trivialDecision == False:
-                print('generateData_trivialDecision')
                 currentStateActionPair = stateActionPair()
                 currentStateActionPair.state = currentState_readyToStartActivities
-                print('currentState_readyToStartActivities',currentState_readyToStartActivities)
+                #print('currentState_readyToStartActivities',currentState_readyToStartActivities)
                 currentStateActionPair.action = currentAction
-                print('currentAction',currentAction)
+                #print('currentAction',currentAction)
                 currentStateActionPairsOfRun.append(currentStateActionPair)
+
 
             ## STEP 2 ##
             # 2.1 find out when the next event (activity end) occurs
@@ -396,6 +409,7 @@ def runSimulation(runSimulation_input):
 
         if purpose == "generateData":
             stateActionPairsOfRuns.append(currentStateActionPairsOfRun)
+        #print('trivialDecisionPercentages',trivialDecisionPercentages)
 
         # increment the index for the simulation run at the end of the loop
         indexSimulationRun += 1
@@ -423,7 +437,9 @@ def runSimulation(runSimulation_input):
             indexBestRun = totalDurations.index(totalDurationMin)
             currentRunSimulation_output.stateActionPairsOfBestRun = stateActionPairsOfRuns[indexBestRun]
 
+
     print("end " + str(currentActivitySequence.fileName[:-4]))
-    print('-------------------------------------------------------------')
+    #print('-------------------------------------------------------------')
+
 
     return currentRunSimulation_output
