@@ -102,7 +102,7 @@ def runSimulation(runSimulation_input):
     # the serial number of topology
     currentActivitySequence = activitySequences[currentIndexActivitySequence]
 
-    print("start " + str(currentActivitySequence.fileName[:-4]))
+    #print("start " + str(currentActivitySequence.fileName[:-4]))
     #print('------------------------------------------------------------------------------------------')
 
     # reset variables for the series of runs
@@ -162,8 +162,9 @@ def runSimulation(runSimulation_input):
 
             # 1.2 check if the decision is trivial
             trivialDecision = True
+            indexReadyToStartActivitiesInState = indexReadyToStartActivities[0:min(numberOfActivitiesInStateVector,len(indexReadyToStartActivities))]
             # compute powerset of decisions_indexActivity
-            indexReadyToStartActivitiesPowerset = list(powerset(indexReadyToStartActivities))
+            indexReadyToStartActivitiesPowerset = list(powerset(indexReadyToStartActivitiesInState))
             # find feasible combined decisions_indexActivity (only resource check needed)
             feasibleCombinedDecisions_indexActivity = []
             for i in reversed(range(len(indexReadyToStartActivitiesPowerset))):
@@ -438,7 +439,7 @@ def runSimulation(runSimulation_input):
             currentRunSimulation_output.stateActionPairsOfBestRun = stateActionPairsOfRuns[indexBestRun]
 
 
-    print("end " + str(currentActivitySequence.fileName[:-4]))
+    #print("end " + str(currentActivitySequence.fileName[:-4]))
     #print('-------------------------------------------------------------')
 
 
