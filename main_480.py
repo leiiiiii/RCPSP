@@ -162,14 +162,13 @@ for run in range(numberOfMainRun):
     runSimulation_inputs = []
     for i in range(numberOfFilesTrain):
         currentRunSimulation_input = runSimulation_input()
-        currentRunSimulation_input.indexActivitySequence = indexFilesTrain[i]
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTrain[i]]
         currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToGenerateData
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "generateData"
         currentRunSimulation_input.randomDecisionProbability = 1
         currentRunSimulation_input.policyType = None
         currentRunSimulation_input.decisionTool = None
-        currentRunSimulation_input.activitySequences = activitySequences
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
         currentRunSimulation_input.stateVectorLength = stateVectorLength
@@ -223,20 +222,20 @@ for run in range(numberOfMainRun):
     runSimulation_inputs = []
     for i in range(numberOfFilesTest):
         currentRunSimulation_input = runSimulation_input()
-        currentRunSimulation_input.indexActivitySequence = indexFilesTest[i]
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
         currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToGenerateData
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "testPolicy"
         currentRunSimulation_input.randomDecisionProbability = 1
         currentRunSimulation_input.policyType = None
         currentRunSimulation_input.decisionTool = None
-        currentRunSimulation_input.activitySequences = activitySequences
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
         currentRunSimulation_input.stateVectorLength = stateVectorLength
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+
         runSimulation_inputs.append(currentRunSimulation_input)
 
     pool = mp.Pool(processes=numberOfCpuProcessesToGenerateData)
@@ -260,14 +259,13 @@ for run in range(numberOfMainRun):
     print('###### NEURAL NETWORK MODEL ON TRAIN ACTIVITY SEQUENCES  ######')
     for i in range(numberOfFilesTrain):
         currentRunSimulation_input = runSimulation_input()
-        currentRunSimulation_input.indexActivitySequence = indexFilesTrain[i]
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTrain[i]]
         currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "testPolicy"
         currentRunSimulation_input.randomDecisionProbability = 0
         currentRunSimulation_input.policyType = "neuralNetworkModel"
         currentRunSimulation_input.decisionTool = neuralNetworkModel
-        currentRunSimulation_input.activitySequences = activitySequences
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
         currentRunSimulation_input.stateVectorLength = stateVectorLength
@@ -286,14 +284,13 @@ for run in range(numberOfMainRun):
     print('###### NEURAL NETWORK MODEL ON TEST ACTIVITY SEQUENCES  ######')
     for i in range(numberOfFilesTest):
         currentRunSimulation_input = runSimulation_input()
-        currentRunSimulation_input.indexActivitySequence = indexFilesTest[i]
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
         currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "testPolicy"
         currentRunSimulation_input.randomDecisionProbability = 0
         currentRunSimulation_input.policyType = "neuralNetworkModel"
         currentRunSimulation_input.decisionTool = neuralNetworkModel
-        currentRunSimulation_input.activitySequences = activitySequences
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
         currentRunSimulation_input.stateVectorLength = stateVectorLength
@@ -335,10 +332,10 @@ for run in range(numberOfMainRun):
     sumTotalDurationRandomTestRecord.append(sumTotalDurationRandomTest)
     sumTotalDurationWithNeuralNetworkModelTestRecord.append(sumTotalDurationWithNeuralNetworkModelTest)
 
-    print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
-    print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
-    print("sumTotalDurationRandomTest = " + str(sumTotalDurationRandomTest))
-    print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWithNeuralNetworkModelTest))
+    #print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
+    #print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
+    #print("sumTotalDurationRandomTest = " + str(sumTotalDurationRandomTest))
+    #print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWithNeuralNetworkModelTest))
 
 
     # compute computation time
@@ -351,12 +348,26 @@ for run in range(numberOfMainRun):
     ws['B1'] = 'NNTrain'
     ws['D1'] = 'RandomTest'
     ws['F1'] = 'NNTest'
+    ws['H1'] = 'time'
     ws.cell(row=run + 2, column=4).value = sumTotalDurationRandomTestRecord[run]
     ws.cell(row=run + 2, column=6).value = sumTotalDurationWithNeuralNetworkModelTestRecord[run]
     ws.cell(row=run + 2, column=1).value = sumTotalDurationRandomTrainRecord[run]
     ws.cell(row=run + 2, column=2).value = sumTotalDurationWithNeuralNetworkModelTrainRecord[run]
     ws.cell(row=run + 2, column=3).value = 1
     ws.cell(row=run + 2, column=5).value = 2
+    ws.cell(row=2, column=8).value = t_computation
+
+    #change column width and height
+    ws.column_dimensions['A'].width = 15.0
+    ws.column_dimensions['D'].width = 15.0
+
+    # alignment
+    align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    ws['A1'].alignment = align
+    ws['B1'].alignment = align
+    ws['D1'].alignment = align
+    ws['F1'].alignment = align
+    ws['H1'].alignment = align
 
     run+=1
     importExistingNeuralNetworkModel = True

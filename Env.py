@@ -56,14 +56,13 @@ class stateActionPair:
 
 class runSimulation_input:
     def __init__(self):
-        self.indexActivitySequence = None
+        self.activitySequence = []
         self.numberOfSimulationRuns = None
         self.timeDistribution = None
         self.purpose = None
         self.randomDecisionProbability = None
         self.policyType = None
         self.decisionTool = None
-        self.activitySequences = []
         self.numberOfResources = None
         self.numberOfActivitiesInStateVector = None
         self.stateVectorLength = None
@@ -84,23 +83,19 @@ class runSimulation_output:
 
 def runSimulation(runSimulation_input):
 
-    currentIndexActivitySequence = runSimulation_input.indexActivitySequence
+    currentActivitySequence = runSimulation_input.activitySequence
     numberOfSimulationRuns = runSimulation_input.numberOfSimulationRuns
     timeDistribution = runSimulation_input.timeDistribution
     purpose = runSimulation_input.purpose
     randomDecisionProbability = runSimulation_input.randomDecisionProbability
     policyType = runSimulation_input.policyType
     decisionTool = runSimulation_input.decisionTool
-    activitySequences = runSimulation_input.activitySequences
     numberOfResources = runSimulation_input.numberOfResources
     numberOfActivitiesInStateVector = runSimulation_input.numberOfActivitiesInStateVector
     stateVectorLength = runSimulation_input.stateVectorLength
     decisions_indexActivity = runSimulation_input.decisions_indexActivity
     rescaleFactorTime = runSimulation_input.rescaleFactorTime
     numberOfActivities = runSimulation_input.numberOfActivities
-
-    # the serial number of topology
-    currentActivitySequence = activitySequences[currentIndexActivitySequence]
 
     #print("start " + str(currentActivitySequence.fileName[:-4]))
     #print('------------------------------------------------------------------------------------------')
