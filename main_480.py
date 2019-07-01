@@ -27,7 +27,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData = 3
+numberOfSimulationRunsToGenerateData =100
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 10
 
@@ -378,7 +378,7 @@ for run in range(numberOfMainRun):
     #print('actions',actions)
 
 
-wb.save(relativePath + "/database_480/test.xlsx")
+wb.save(relativePath + "/database_480/100times.xlsx")
 
 # #write ouput to excel
 # wb = Workbook()
