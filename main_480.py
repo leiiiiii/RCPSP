@@ -27,7 +27,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =100
+numberOfSimulationRunsToGenerateData =10000
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 10
 
@@ -57,6 +57,7 @@ states = []
 actions = []
 sumTotalDurationRandomTestRecord = []
 sumTotalDurationWithNeuralNetworkModelTestRecord = []
+sumTotalDurationWithHeuristicTestRecord = []
 sumTotalDurationRandomTrainRecord = []
 sumTotalDurationWithNeuralNetworkModelTrainRecord = []
 
@@ -303,6 +304,30 @@ for run in range(numberOfMainRun):
         activitySequences[indexFilesTest[i]].totalDurationWithPolicy = currentRunSimulation_output.totalDurationMean
 
 
+    #---------------------------------------------------------Heuristic----------------------------------------------------------------------------
+    ####  TEST HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ####
+    print('###### HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ######')
+    for i in range(numberOfFilesTest):
+        currentRunSimulation_input = runSimulation_input()
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
+        currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+        currentRunSimulation_input.timeDistribution = timeDistribution
+        currentRunSimulation_input.purpose = "testPolicy"
+        currentRunSimulation_input.randomDecisionProbability = 0
+        currentRunSimulation_input.policyType = "heuristic"
+        currentRunSimulation_input.decisionTool = None
+        currentRunSimulation_input.numberOfResources = numberOfResources
+        currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+        currentRunSimulation_input.stateVectorLength = stateVectorLength
+        currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+        currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+        currentRunSimulation_input.numberOfActivities = numberOfActivities
+
+        currentRunSimulation_output = runSimulation(currentRunSimulation_input)
+
+        activitySequences[indexFilesTest[i]].totalDurationWithHeuristic = currentRunSimulation_output.totalDurationMean
+
+
 
     #------------------------------------------------------EVALUATION-----------------------------------------------------------------------------
     ####  EVALUATION OF RESULTS OF TRAIN ACTIVITY SEQUENCES  ####
@@ -320,17 +345,20 @@ for run in range(numberOfMainRun):
     #print('sumTotalDurationRandomTrainRecord',sumTotalDurationRandomTrainRecord)
     #print(sumTotalDurationWithNeuralNetworkModelTrainRecord)
 
-    ####  EVALUATION OF RESULTS OF TEST ACTIVITY SEQUENCES  ####
+    ####  EVALUATION OF NN RESULTS OF TEST ACTIVITY SEQUENCES  ####
     sumTotalDurationRandomTest = 0
     sumTotalDurationWithNeuralNetworkModelTest = 0
+    sumTotalDurationWithHeuristicTest = 0
 
     for i in range(numberOfFilesTest):
         sumTotalDurationRandomTest += activitySequences[indexFilesTest[i]].totalDurationMean
         sumTotalDurationRandomTest = round(sumTotalDurationRandomTest,4)
         sumTotalDurationWithNeuralNetworkModelTest += activitySequences[indexFilesTest[i]].totalDurationWithPolicy
+        sumTotalDurationWithHeuristicTest += activitySequences[indexFilesTest[i]].totalDurationWithHeuristic
 
     sumTotalDurationRandomTestRecord.append(sumTotalDurationRandomTest)
     sumTotalDurationWithNeuralNetworkModelTestRecord.append(sumTotalDurationWithNeuralNetworkModelTest)
+    sumTotalDurationWithHeuristicTestRecord.append(sumTotalDurationWithHeuristicTest)
 
     #print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
     #print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
@@ -348,18 +376,22 @@ for run in range(numberOfMainRun):
     ws['B1'] = 'NNTrain'
     ws['D1'] = 'RandomTest'
     ws['F1'] = 'NNTest'
-    ws['H1'] = 'time'
+    ws['H1'] = 'HeuristicTest'
+    ws['I1'] = 'time'
     ws.cell(row=run + 2, column=4).value = sumTotalDurationRandomTestRecord[run]
     ws.cell(row=run + 2, column=6).value = sumTotalDurationWithNeuralNetworkModelTestRecord[run]
     ws.cell(row=run + 2, column=1).value = sumTotalDurationRandomTrainRecord[run]
     ws.cell(row=run + 2, column=2).value = sumTotalDurationWithNeuralNetworkModelTrainRecord[run]
+    ws.cell(row=run + 2, column=8).value = sumTotalDurationWithHeuristicTestRecord[run]
     ws.cell(row=run + 2, column=3).value = 1
     ws.cell(row=run + 2, column=5).value = 2
-    ws.cell(row=2, column=8).value = t_computation
+    ws.cell(row=run + 2, column=7).value = 3
+    ws.cell(row=2, column=9).value = t_computation
 
     #change column width and height
     ws.column_dimensions['A'].width = 15.0
     ws.column_dimensions['D'].width = 15.0
+    ws.column_dimensions['G'].width = 15.0
 
     # alignment
     align = Alignment(horizontal='center', vertical='center', wrap_text=True)
@@ -368,6 +400,7 @@ for run in range(numberOfMainRun):
     ws['D1'].alignment = align
     ws['F1'].alignment = align
     ws['H1'].alignment = align
+    ws['I1'].alignment = align
 
     run+=1
     importExistingNeuralNetworkModel = True
@@ -378,7 +411,7 @@ for run in range(numberOfMainRun):
     #print('actions',actions)
 
 
-wb.save(relativePath + "/database_480/100times.xlsx")
+wb.save(relativePath + "/database_480/10000timesheuristic.xlsx")
 
 # #write ouput to excel
 # wb = Workbook()

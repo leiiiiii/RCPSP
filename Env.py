@@ -28,6 +28,7 @@ class activitySequence:
         self.totalDurationMax = None
         self.luckFactorMean = None
         self.totalDurationWithPolicy = None
+        self.totalDurationWithHeuristic = None
         self.trivialDecisionPercentageMean = None
 
 
@@ -279,8 +280,11 @@ def runSimulation(runSimulation_input):
                         # priorityValues[i] = outputNeuralNetworkModel[0,i]
                         priorityValues = outputNeuralNetworkModel[0]
                         #print('priorityValues:',priorityValues)
-                elif policyType == "otherPolicy1":
-                    print("generate priority values with other policy 1")
+
+                elif policyType == "heuristic":
+                    #print("generate priority values with most critical resource")
+                    priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
+
                 elif policyType == "otherPolicy2":
                     print("generate priority values with other policy 2")
                 else:
