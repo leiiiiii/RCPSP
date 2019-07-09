@@ -13,6 +13,8 @@ timestamp = "{0:%Y-%m-%d-%H-%M-%S}".format(datetime.now())
 def createNeuralNetworkModel(input_size, output_size, learningRate):
     network = input_data(shape=[None, input_size], name="input")
 
+    #tflearn.init_graph(num_cores=8, gpu_memory_fraction=0.5)
+
     network = fully_connected(network, 10, activation="relu")
 
     network = fully_connected(network, 10, activation="relu")
