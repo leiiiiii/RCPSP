@@ -4,6 +4,7 @@ from itertools import chain, combinations
 import numpy as np
 
 
+
 def powerset(listOfElements):
     s = list(listOfElements)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
@@ -136,6 +137,7 @@ def runSimulation(runSimulation_input):
             currentActivitySequence.activities[indexStartActivity].withToken = True
             currentActivitySequence.activities[indexStartActivity].idleToken = True
 
+        output = np.empty(shape=[0, stateVectorLength])
         # start simulation
         simulationRunFinished = False
         while simulationRunFinished == False:    # if there are some token left in some activities
@@ -197,7 +199,7 @@ def runSimulation(runSimulation_input):
             activityConversionVector = [-1] * numberOfActivitiesInStateVector
             activityScores = []
             indexReadyToStartActivitiesInState = indexReadyToStartActivities[0:min(numberOfActivitiesInStateVector, len(indexReadyToStartActivities))]
-            #print('indexReadyToStartActivitiesInState',indexReadyToStartActivitiesInState)
+
 
             if trivialDecision:
                 # no conversion needed
@@ -253,9 +255,18 @@ def runSimulation(runSimulation_input):
 
                 for j in range(numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
+
             # (optional: add information about the future resource utilisation)
             # determine the earliest starting point of each activity considering the problem without resource constraints and deterministic
             # currentState_futureResourceUtilisation = np.zeros([numberOfResources, timeHorizon])
+
+
+
+            # State_readyToStartActivities = np.append(State_readyToStartActivities,currentState_readyToStartActivities,axis=0)
+            # print('State_readyToStartActivities',State_readyToStartActivities)
+
+
+
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
             randomDecisionAtThisStep = (random.random() < randomDecisionProbability)
@@ -270,16 +281,22 @@ def runSimulation(runSimulation_input):
                 # print('randomDecisionAtThisStep')
 
             else:
+
                 if policyType == "neuralNetworkModel":
+                    #State_readyToStartActivities = np.empty(shape=[0,stateVectorLength])
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
-                    #print('currentState_readyToStartActivities:',currentState_readyToStartActivities)
+                    #State_readyToStartActivities = np.concatenate((State_readyToStartActivities, currentState_readyToStartActivities), axis=0)
+                    print('currentState_readyToStartActivities', currentState_readyToStartActivities)
+
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
-                    #print('outputNeuralNetworkModel:',outputNeuralNetworkModel)
-                    priorityValues = np.zeros(numberOfActivitiesInStateVector)
-                    for i in range(len(outputNeuralNetworkModel)):
-                        # priorityValues[i] = outputNeuralNetworkModel[0,i]
-                        priorityValues = outputNeuralNetworkModel[0]
-                        #print('priorityValues:',priorityValues)
+
+                    #output = np.concatenate((output,outputNeuralNetworkModel), axis=0)
+                    #print('outputNeuralNetworkModel',outputNeuralNetworkModel)
+                    print('outputNeuralNetworkModel:',outputNeuralNetworkModel)
+
+                    priorityValues = outputNeuralNetworkModel[0]
+
+                    # print('priorityValues:',priorityValues)
 
                 elif policyType == "heuristic":
                     #print("generate priority values with most critical resource")
@@ -289,7 +306,6 @@ def runSimulation(runSimulation_input):
                     print("generate priority values with other policy 2")
                 else:
                     print("policy name not existing")
-
 
 
             # reorder list according to priority
@@ -337,7 +353,7 @@ def runSimulation(runSimulation_input):
                             currentAction[indexActivityToStartLocal] = 1
                             indexStartedActivities.append(indexActivityToStartGlobal)
 
-            #print('currentaction',currentAction)
+            print('currentaction',currentAction)
 
 
             # 1.8 if the purpose is to generate training data, save the current state action pair
@@ -436,7 +452,6 @@ def runSimulation(runSimulation_input):
         if totalDurationStDev != 0:
             indexBestRun = totalDurations.index(totalDurationMin)
             currentRunSimulation_output.stateActionPairsOfBestRun = stateActionPairsOfRuns[indexBestRun]
-
 
     #print("end " + str(currentActivitySequence.fileName[:-4]))
     #print('-------------------------------------------------------------')
