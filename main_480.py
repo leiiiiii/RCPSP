@@ -28,7 +28,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =10
+numberOfSimulationRunsToGenerateData =1000
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
 
@@ -36,8 +36,8 @@ numberOfMainRun = 1
 percentageOfFilesTest = 0.1
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 5 #walk entire samples
-learningRate = 0.001
+numberOfEpochs = 3 #walk entire samples
+learningRate = 0.1
 
 # paths
 relativePath = os.path.dirname(__file__)
@@ -189,10 +189,10 @@ for run in range(numberOfMainRun):
 
 
         #correspondence best states and actions pairs --> len(states) = len(actions)
-        #print('state',states)
+    # print('state',states)
         #print('states:',len(states))
         # print('length of state',len(states[0]))
-        #print('actions:',actions)
+    print('actions:',actions)
 
 
     ####  TRAIN MODEL USING TRAINING DATA  ####

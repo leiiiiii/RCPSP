@@ -286,17 +286,17 @@ def runSimulation(runSimulation_input):
                     #State_readyToStartActivities = np.empty(shape=[0,stateVectorLength])
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
                     #State_readyToStartActivities = np.concatenate((State_readyToStartActivities, currentState_readyToStartActivities), axis=0)
-                    print('currentState_readyToStartActivities', currentState_readyToStartActivities)
+                    #print('currentState_readyToStartActivities', currentState_readyToStartActivities)
 
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
 
                     #output = np.concatenate((output,outputNeuralNetworkModel), axis=0)
                     #print('outputNeuralNetworkModel',outputNeuralNetworkModel)
-                    print('outputNeuralNetworkModel:',outputNeuralNetworkModel)
+                    #print('outputNeuralNetworkModel:',outputNeuralNetworkModel)
 
                     priorityValues = outputNeuralNetworkModel[0]
 
-                    # print('priorityValues:',priorityValues)
+                    print('priorityValues:',priorityValues)
 
                 elif policyType == "heuristic":
                     #print("generate priority values with most critical resource")
@@ -317,7 +317,8 @@ def runSimulation(runSimulation_input):
             #     print('decisions_indexActivity_reordered',decisions_indexActivity_reordered)
 
             # use the priority values to start new activities
-            currentAction = np.zeros([numberOfActivitiesInStateVector])
+            #currentAction = np.zeros([numberOfActivitiesInStateVector])
+            currentAction = [0.01, 0.01, 0.01, 0.01, 0.01,0.01]
             indexStartedActivities = []
             # consider the decision one by one in reordered list
             for indexActivityToStartLocal in decisions_indexActivity_reordered:
@@ -353,7 +354,7 @@ def runSimulation(runSimulation_input):
                             currentAction[indexActivityToStartLocal] = 1
                             indexStartedActivities.append(indexActivityToStartGlobal)
 
-            print('currentaction',currentAction)
+            #print('currentaction',currentAction)
 
 
             # 1.8 if the purpose is to generate training data, save the current state action pair
