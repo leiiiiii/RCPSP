@@ -19,7 +19,7 @@ t_start = time.time()
 timeDistribution = "deterministic"    # deterministic, exponential, uniform_1, uniform_2, ...
 
 # CPU parameters
-numberOfCpuProcessesToGenerateData = 8   # paoloPC has 16 cores
+numberOfCpuProcessesToGenerateData = 16   # paoloPC has 16 cores
 maxTasksPerChildToGenerateData = 4        # 4 is the best for paoloPC
 
 # input state vector  parameters
@@ -28,7 +28,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =1000
+numberOfSimulationRunsToGenerateData =5000
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
 
@@ -36,8 +36,8 @@ numberOfMainRun = 1
 percentageOfFilesTest = 0.1
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 3 #walk entire samples
-learningRate = 0.1
+numberOfEpochs = 10 #walk entire samples
+learningRate = 0.01
 
 # paths
 relativePath = os.path.dirname(__file__)
@@ -61,6 +61,7 @@ sumTotalDurationWithNeuralNetworkModelTestRecord = []
 sumTotalDurationWithHeuristicTestRecord = []
 sumTotalDurationRandomTrainRecord = []
 sumTotalDurationWithNeuralNetworkModelTrainRecord = []
+sumTotalDurationWithHeuristicTrainRecord = []
 
 
 # read all activity sequences from database
@@ -210,8 +211,8 @@ for run in range(numberOfMainRun):
         # neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]))
 
     neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True,batch_size=32,validation_set=0.3)
-    output = neuralNetworkModel.predict(states)
-    print(output)
+    # output = neuralNetworkModel.predict(states)
+    # print(output)
 
     ####  CREATE BENCHMARK WITH RANDOM DECISIONS ALSO WITH TEST ACTIVITY SEQUENCES  ####
     print('######  RANDOM DECISION ON TEST ACTIVITY SEQUENCES  ######')
@@ -299,6 +300,35 @@ for run in range(numberOfMainRun):
 
 
     #---------------------------------------------------------Heuristic----------------------------------------------------------------------------
+        ####  TEST HEURISTIC METHOD ON TRAIN ACTIVITY SEQUENCES  ####
+    print('###### HEURISTIC METHOD ON TRAIN ACTIVITY SEQUENCES  ######')
+    runSimulation_inputs = []
+    for i in range(numberOfFilesTrain):
+        currentRunSimulation_input = runSimulation_input()
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTrain[i]]
+        currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+        currentRunSimulation_input.timeDistribution = timeDistribution
+        currentRunSimulation_input.purpose = "testPolicy"
+        currentRunSimulation_input.randomDecisionProbability = 0
+        currentRunSimulation_input.policyType = "heuristic"
+        currentRunSimulation_input.decisionTool = None
+        currentRunSimulation_input.numberOfResources = numberOfResources
+        currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+        currentRunSimulation_input.stateVectorLength = stateVectorLength
+        currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+        currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+        currentRunSimulation_input.numberOfActivities = numberOfActivities
+
+        runSimulation_inputs.append(currentRunSimulation_input)
+
+    pool = mp.Pool(processes=numberOfCpuProcessesToGenerateData)
+
+    runSimulation_outputs = pool.map(runSimulation, runSimulation_inputs)
+    # assign simulation results to activity sequences
+    for i in range(numberOfFilesTrain):
+        activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic = currentRunSimulation_output.totalDurationMean
+
+
     ####  TEST HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ####
     print('###### HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ######')
     for i in range(numberOfFilesTest):
@@ -326,16 +356,18 @@ for run in range(numberOfMainRun):
     #------------------------------------------------------EVALUATION-----------------------------------------------------------------------------
     ####  EVALUATION OF RESULTS OF TRAIN ACTIVITY SEQUENCES  ####
     sumTotalDurationRandomTrain = 0
+    sumTotalDurationWithHeuristicTrain = 0
     sumTotalDurationWithNeuralNetworkModelTrain = 0
 
     for i in range(numberOfFilesTrain):
         sumTotalDurationRandomTrain += activitySequences[indexFilesTrain[i]].totalDurationMean
         sumTotalDurationRandomTrain = round(sumTotalDurationRandomTrain,4)
         sumTotalDurationWithNeuralNetworkModelTrain += activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
+        sumTotalDurationWithHeuristicTrain += activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic
 
     sumTotalDurationRandomTrainRecord.append(sumTotalDurationRandomTrain)
     sumTotalDurationWithNeuralNetworkModelTrainRecord.append(sumTotalDurationWithNeuralNetworkModelTrain)
-
+    sumTotalDurationWithHeuristicTrainRecord.append(sumTotalDurationWithHeuristicTrain)
 
     ####  EVALUATION OF NN RESULTS OF TEST ACTIVITY SEQUENCES  ####
     sumTotalDurationRandomTest = 0
@@ -354,6 +386,7 @@ for run in range(numberOfMainRun):
 
     print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
     print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
+    print("sumTotalDurationWithHeuristicTrain = " + str(sumTotalDurationWithHeuristicTrain))
     print("sumTotalDurationRandomTest = " + str(sumTotalDurationRandomTest))
     print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWithNeuralNetworkModelTest))
     print("sumTotalDurationWithHeuristicTest = " + str(sumTotalDurationWithHeuristicTest))
@@ -407,7 +440,7 @@ for run in range(numberOfMainRun):
 # wb.save(relativePath + "/database_480/1000times3hidden.xlsx")
 
 #---------------------------------------------------------------write every topology---------------------------------------------------------------------------#
-#write ouput to excel
+# # write ouput to excel
 # wb = Workbook()
 # ws = wb.create_sheet('J30_duration',0)
 #
@@ -500,7 +533,7 @@ for run in range(numberOfMainRun):
 #
 # ws.cell(row=4, column=1).value = round(t_computation,2)
 #
-# wb.save(relativePath + "/database_480/1000_3hidden.xlsx")
+# wb.save(relativePath + "/database_480/1000_update.xlsx")
 
 
 
