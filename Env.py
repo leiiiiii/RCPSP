@@ -2,12 +2,36 @@ import random
 import statistics as st
 from itertools import chain, combinations
 import numpy as np
+import itertools
 
+a1 = [1,0,0,0,0,0]
+a2 = [1,1,0,0,0,0]
+a3 = [1,1,1,0,0,0]
+a4 = [1,1,1,1,0,0]
+a5 = [1,1,1,1,1,0]
+a6 = [1,1,1,1,1,1]
+A = [a1, a2, a3, a4, a5, a6]
 
+#enumerate all possible action
+def possibleAction(A):
+    A_output = [[0,0,0,0,0,0]]
+    c=np.empty([0,6])
+    for a in A:
+        list2=list(itertools.permutations(a))
+        for value in list2:
+            b=[list(value)]
+            c=np.concatenate((c,b),axis=0)
+            output = np.unique(c,axis=0)
+        A_output=np.concatenate((A_output, output),axis=0)
+    A_output = np.unique(A_output, axis=0)
+    return A_output
 
 def powerset(listOfElements):
     s = list(listOfElements)
     return chain.from_iterable(combinations(s, r) for r in range(len(s)+1))
+
+def actionsequence(Elements):
+    a = combinations(range(1),2)
 
 class activitySequence:
 
@@ -318,7 +342,7 @@ def runSimulation(runSimulation_input):
 
             # use the priority values to start new activities
             #currentAction = np.zeros([numberOfActivitiesInStateVector])
-            currentAction = [0.01, 0.01, 0.01, 0.01, 0.01,0.01]
+            currentAction = [0, 0, 0, 0, 0, 0]
             indexStartedActivities = []
             # consider the decision one by one in reordered list
             for indexActivityToStartLocal in decisions_indexActivity_reordered:
