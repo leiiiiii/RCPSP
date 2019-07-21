@@ -7,20 +7,16 @@ import itertools
 
 #enumerate all possible action
 def possibleAction(numberOfAction):
-    Action = np.zeros([numberOfAction, numberOfAction], int)
+    Action = np.zeros((numberOfAction, numberOfAction), int)
     for i in range(numberOfAction):
         for number in range(i + 1):
             Action[i][number] = 1
-    A_output = np.zeros([1,numberOfAction])
-    c=np.empty([0,numberOfAction])
+    A_output = np.zeros((1,numberOfAction))
     for a in Action:
         list2=list(itertools.permutations(a))
-        for value in list2:
-            b=[list(value)]
-            c=np.concatenate((c,b),axis=0)
-            output = np.unique(c,axis=0)
-        A_output=np.concatenate((A_output, output),axis=0)
-    A_output = np.unique(A_output, axis=0)
+        list2 = np.asarray(list2)
+        list2 = np.unique(list2, axis=0)
+        A_output = np.concatenate((A_output, list2), axis=0)
     return A_output
 
 def powerset(listOfElements):
