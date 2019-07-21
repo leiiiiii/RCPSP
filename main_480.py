@@ -7,7 +7,6 @@ import re
 from NN_Model_480 import createNeuralNetworkModel
 from Env import runSimulation, runSimulation_input, activitySequence, activity
 import multiprocessing as mp
-import tflearn as tf
 from openpyxl import Workbook
 from openpyxl.styles import Border, Alignment, Side
 
@@ -28,7 +27,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =5000
+numberOfSimulationRunsToGenerateData =1000
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
 
@@ -56,6 +55,7 @@ decisions_indexActivity = []
 decisions_indexActivityPowerset = []
 states = []
 actions = []
+actionsPossibilities = []
 sumTotalDurationRandomTestRecord = []
 sumTotalDurationWithNeuralNetworkModelTestRecord = []
 sumTotalDurationWithHeuristicTestRecord = []
@@ -92,22 +92,18 @@ for i in range(numberOfFiles):
     with open(file, "r") as f:
         currentActivitySequence.index = i
         currentActivitySequence.fileName = os.path.basename(f.name)
-        # allLines = f.read()
-        # next(f)
-        firstLine = f.readline()  # information about numberOfActivities and numberOfResourceTypes
+        firstLine = f.readline()
         firstLineDecomposed = re.split(" +", firstLine)
-        numberOfActivities = (int(firstLineDecomposed[0]) - 2)  # the first and last dummy activity do not count
+        numberOfActivities = (int(firstLineDecomposed[0]) - 2)
         currentActivitySequence.numberOfActivities = numberOfActivities
-        secondLine = f.readline()  # information about total available resources
+        secondLine = f.readline()
         secondLineDecomposed = re.split(" +", secondLine)
         numberOfResources = 0
-        # secondLineDecomposed=[int(secondLineDecomposed)]
-        # print(secondLineDecomposed)
         for totalResources in secondLineDecomposed[0:-1]:
             numberOfResources += 1
             currentActivitySequence.totalResources.append(int(totalResources))
         currentActivitySequence.numberOfResources = numberOfResources
-        thirdLine = f.readline()  # information about starting activities
+        thirdLine = f.readline()
         thirdLineDecomposed = re.split(" +", thirdLine)
         for IdActivity in thirdLineDecomposed[6:-1]:
             currentActivitySequence.indexStartActivities.append(int(IdActivity) - 2)
@@ -184,16 +180,17 @@ for run in range(numberOfMainRun):
         activitySequences[indexFilesTrain[i]].luckFactorMean = runSimulation_outputs[i].luckFactorMean
         activitySequences[indexFilesTrain[i]].trivialDecisionPercentageMean = runSimulation_outputs[i].trivialDecisionPercentageMean
 
-        for currentStateActionPair in runSimulation_outputs[i].stateActionPairsOfBestRun:
-            states.append(currentStateActionPair.state)
-            actions.append(currentStateActionPair.action)
+        # for currentStateActionPair in runSimulation_outputs[i].stateActionPairsOfBestRun:
+        #     states.append(currentStateActionPair.state)
+        #     actions.append(currentStateActionPair.action)
 
+        for currentStateActionPossibilityPair in runSimulation_outputs[i].stateActionPossibilityPairsOfBestRun:
+            states.append(currentStateActionPossibilityPair.state)
+            actionsPossibilities.append(currentStateActionPossibilityPair.actionPossibility)
 
-        #correspondence best states and actions pairs --> len(states) = len(actions)
-    # print('state',states)
-        #print('states:',len(states))
-        # print('length of state',len(states[0]))
-    print('actions:',actions)
+    #print('state',states)
+    #print('actions:',actions)
+    #print('actionsPossibilities',actionsPossibilities)
 
 
     ####  TRAIN MODEL USING TRAINING DATA  ####
@@ -204,13 +201,16 @@ for run in range(numberOfMainRun):
             print("import neural network model exists")
 
         else:
-            neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
-            # neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]))
+            # neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+            neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actionsPossibilities[0]), learningRate)
     else:
-        neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
-        # neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]))
+        #neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
+        neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actionsPossibilities[0]), learningRate)
 
-    neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True,batch_size=32,validation_set=0.3)
+
+    #neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True,batch_size=32,validation_set=0.3)
+    neuralNetworkModel.fit({"input": states}, {"targets": actionsPossibilities}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True, batch_size=32, validation_set=0.3)
+
     # output = neuralNetworkModel.predict(states)
     # print(output)
 
@@ -326,7 +326,7 @@ for run in range(numberOfMainRun):
     runSimulation_outputs = pool.map(runSimulation, runSimulation_inputs)
     # assign simulation results to activity sequences
     for i in range(numberOfFilesTrain):
-        activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic = currentRunSimulation_output.totalDurationMean
+        activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic = runSimulation_outputs[i].totalDurationMean
 
 
     ####  TEST HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ####
@@ -397,11 +397,11 @@ for run in range(numberOfMainRun):
     t_computation = t_end - t_start
     print("t_computation = " + str(t_computation))
 
-    run += 1
-    del states[:]
-    del actions[:]
-    importExistingNeuralNetworkModel = True
-    neuralNetworkModelAlreadyExists = True
+    # run += 1
+    # del states[:]
+    # del actions[:]
+    # importExistingNeuralNetworkModel = True
+    # neuralNetworkModelAlreadyExists = True
 
 
 
