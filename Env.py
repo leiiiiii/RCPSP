@@ -95,6 +95,7 @@ class runSimulation_input:
         self.decisions_indexActivity = []
         self.rescaleFactorTime = None
         self.numberOfActivities = None
+        self.timeHorizon = None
 
 class runSimulation_output:
     def __init__(self):
@@ -123,6 +124,7 @@ def runSimulation(runSimulation_input):
     decisions_indexActivity = runSimulation_input.decisions_indexActivity
     rescaleFactorTime = runSimulation_input.rescaleFactorTime
     numberOfActivities = runSimulation_input.numberOfActivities
+    timeHorizon = runSimulation_input.timeHorizon
 
     #print("start " + str(currentActivitySequence.fileName[:-4]))
     #print('------------------------------------------------------------------------------------------')
@@ -264,7 +266,7 @@ def runSimulation(runSimulation_input):
                 indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
                 indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(activityScores, indexActivitiesGlobal), reverse=True)]
                 activityConversionVector = indexActivitiesGlobal_reordered
-
+            #print(activityConversionVector)
 
 
             # 1.4 normalized state vector and matrix are created
@@ -283,6 +285,10 @@ def runSimulation(runSimulation_input):
 
                 for j in range(numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
+
+                # currentState_futureResourceUtilisation = np.zeros(numberOfResources*timeHorizon)
+                # for i in range(numberOfResources):
+                #     for j in range(timeHorizon):
 
             # (optional: add information about the future resource utilisation)
             # determine the earliest starting point of each activity considering the problem without resource constraints and deterministic
@@ -304,9 +310,9 @@ def runSimulation(runSimulation_input):
 
                 if policyType == "neuralNetworkModel":
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
-                    #print('currentState_readyToStartActivities', currentState_readyToStartActivities)
 
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
+                    #print('outputNeuralNetworkModel',outputNeuralNetworkModel)
                     a = list(outputNeuralNetworkModel[0])
                     actionsindex = a.index(max(a))
                     priorityValues = possibleactions[actionsindex]
@@ -396,10 +402,41 @@ def runSimulation(runSimulation_input):
             for i in range(numberOfActivities):
                 if currentActivitySequence.activities[i].withToken and currentActivitySequence.activities[i].idleToken == False:
                     indexActiveActivities.append(i)
+
                     if currentActivitySequence.activities[i].remainingTime < smallestRemainingTime:
                         smallestRemainingTime = currentActivitySequence.activities[i].remainingTime
 
-            # 2.2 find next finishing activities
+            print('indexActiveActivities', indexActiveActivities)
+
+#-----------------------------------------------------------------------------------------------------------------------------------------
+            #generate timeHorizonMatrix
+            timeHorizonMatrix = np.zeros((len(indexActiveActivities), timeHorizon))
+            timeUnitmatrix=[x for x in range(len(indexActiveActivities))]
+            remainingtimeList = []
+            for i in indexActiveActivities:
+                remainingtimeList.append(currentActivitySequence.activities[i].remainingTime)
+            for (i,j) in zip(timeUnitmatrix,remainingtimeList):
+                timeHorizonMatrix[i][0:j]=1
+            #print('timeHorizonMatrix',timeHorizonMatrix)
+
+            #generate resourceUtilizationMatrix
+            resourcematrix = np.zeros((1, 4))
+            for i in indexActiveActivities:
+                a=[currentActivitySequence.activities[i].requiredResources]
+                resourcematrix=np.concatenate((resourcematrix,a),axis=0)
+            resourcematrix=resourcematrix[1:]
+            #print('resourcematrix',resourcematrix)
+            resourceUtilizationMatrix = resourcematrix.T
+            #print('resourceUtilizationMatrix',resourceUtilizationMatrix)
+
+            #currentState_futureResourceUtilisation for already started activities generated
+            currentState_futureResourceUtilisation = np.dot(resourceUtilizationMatrix,timeHorizonMatrix)
+            #print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
+
+            #currentState_futureResourceUtilisation = currentState_futureResourceUtilisation.reshape(numberOfResources * timeHorizon)
+#-----------------------------------------------------------------------------------------------------------------------------------------
+
+                # 2.2 find next finishing activities
             indexNextFinishingActivities = []
             for i in indexActiveActivities:
                 if currentActivitySequence.activities[i].remainingTime == smallestRemainingTime:
