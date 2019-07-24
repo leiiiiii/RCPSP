@@ -250,6 +250,7 @@ def runSimulation(runSimulation_input):
                 indexResourcesGlobal = list(range(0,numberOfResources))
                 indexResourcesGlobal_reordered = [x for _, x in sorted(zip(resourceNeedForReadyToStartActivities, indexResourcesGlobal), reverse=True)]
                 resourceConversionVector = indexResourcesGlobal_reordered
+                print('resourceConversionvector',resourceConversionVector)
 
 
                 # reorder activities depending on resource utilisation
@@ -487,7 +488,7 @@ def runSimulation(runSimulation_input):
                         value = timeHorizon-maximaltimeHorizon
 
                 for (i, j) in zip(timeUnitmatrixforFollowing, timeListforFollowing):
-                        timeHorizonMatrixforFollowing[i][maximaltimeHorizon:j] = 1
+                    timeHorizonMatrixforFollowing[i][maximaltimeHorizon:j] = 1
 
             elif len(indexFollowingActivities)==1:
                 for i in indexFollowingActivities:
@@ -511,15 +512,24 @@ def runSimulation(runSimulation_input):
 
             elif len(indexFollowingActivities)==1:
                 for i in indexFollowingActivities:
-                    resourceUtilizationMatrixforFollowing=currentActivitySequence.activities[i].requiredResources.reshape((1,numberOfResources))
+                    currentActivitySequence.activities[i].requiredResources=np.array(currentActivitySequence.activities[i].requiredResources)
+                    resourceUtilizationMatrixforFollowing=currentActivitySequence.activities[i].requiredResources.reshape((numberOfResources,1))
 
 
             # currentState_futureResourceUtilisation for following activities generated
             currentState_futureResourceUtilisation_forFollowing = np.dot(resourceUtilizationMatrixforFollowing, timeHorizonMatrixforFollowing)
 
             currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation,currentState_futureResourceUtilisation_forFollowing)
+            print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
+
+            for (i,j) in zip(resourceConversionVector,range(len(resourceConversionVector))):
+                print(i,j)
+                currentState_futureResourceUtilisation[j] = currentState_futureResourceUtilisation[i]
+
+            print('currentState_futureResourceUtilisation_t', currentState_futureResourceUtilisation)
+
             currentStateFuturnResourceUtilisation=currentState_futureResourceUtilisation.flatten()
-            print('currentStateFuturnResourceUtilisation',currentStateFuturnResourceUtilisation)
+
 
             #----------------------------------------------------------------------------------------------------------------------------------------
 
