@@ -522,9 +522,9 @@ def runSimulation(runSimulation_input):
             currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation,currentState_futureResourceUtilisation_forFollowing)
             print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
 
-            for (i,j) in zip(resourceConversionVector,range(len(resourceConversionVector))):
-                print(i,j)
-                currentState_futureResourceUtilisation[j] = currentState_futureResourceUtilisation[i]
+
+            for (i,j) in zip(range(len(resourceConversionVector)),resourceConversionVector):
+                currentState_futureResourceUtilisation[i] =currentState_futureResourceUtilisation[j]
 
             print('currentState_futureResourceUtilisation_t', currentState_futureResourceUtilisation)
 
