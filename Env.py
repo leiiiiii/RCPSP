@@ -287,11 +287,7 @@ def runSimulation(runSimulation_input):
                 for j in range(numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
 
-
-            # (optional: add information about the future resource utilisation)
-            # determine the earliest starting point of each activity considering the problem without resource constraints and deterministic
-            # currentState_futureResourceUtilisation = np.zeros([numberOfResources, timeHorizon])
-            # State_readyToStartActivities = np.append(State_readyToStartActivities,currentState_readyToStartActivities,axis=0)
+                currentState_readyToStartActivities.append(currentStateFuturnResourceUtilisation)
 
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
@@ -520,16 +516,13 @@ def runSimulation(runSimulation_input):
             currentState_futureResourceUtilisation_forFollowing = np.dot(resourceUtilizationMatrixforFollowing, timeHorizonMatrixforFollowing)
 
             currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation,currentState_futureResourceUtilisation_forFollowing)
-            #print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
 
             resourceConversionVector=np.array(resourceConversionVector)
 
             currentState_futureResourceUtilisation=currentState_futureResourceUtilisation[resourceConversionVector]
 
-            #print('currentState_futureResourceUtilisation_t', currentState_futureResourceUtilisation)
-
             currentStateFuturnResourceUtilisation=currentState_futureResourceUtilisation.flatten()
-
+            print('currentState_futureResourceUtilisation', currentStateFuturnResourceUtilisation)
 
             #----------------------------------------------------------------------------------------------------------------------------------------
 
