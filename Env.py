@@ -250,7 +250,7 @@ def runSimulation(runSimulation_input):
                 indexResourcesGlobal = list(range(0,numberOfResources))
                 indexResourcesGlobal_reordered = [x for _, x in sorted(zip(resourceNeedForReadyToStartActivities, indexResourcesGlobal), reverse=True)]
                 resourceConversionVector = indexResourcesGlobal_reordered
-                print('resourceConversionvector',resourceConversionVector)
+                #print('resourceConversionvector',resourceConversionVector)
 
 
                 # reorder activities depending on resource utilisation
@@ -520,13 +520,13 @@ def runSimulation(runSimulation_input):
             currentState_futureResourceUtilisation_forFollowing = np.dot(resourceUtilizationMatrixforFollowing, timeHorizonMatrixforFollowing)
 
             currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation,currentState_futureResourceUtilisation_forFollowing)
-            print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
+            #print('currentState_futureResourceUtilisation',currentState_futureResourceUtilisation)
 
+            resourceConversionVector=np.array(resourceConversionVector)
 
-            for (i,j) in zip(range(len(resourceConversionVector)),resourceConversionVector):
-                currentState_futureResourceUtilisation[i] =currentState_futureResourceUtilisation[j]
+            currentState_futureResourceUtilisation=currentState_futureResourceUtilisation[resourceConversionVector]
 
-            print('currentState_futureResourceUtilisation_t', currentState_futureResourceUtilisation)
+            #print('currentState_futureResourceUtilisation_t', currentState_futureResourceUtilisation)
 
             currentStateFuturnResourceUtilisation=currentState_futureResourceUtilisation.flatten()
 
