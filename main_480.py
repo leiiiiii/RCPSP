@@ -27,7 +27,7 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =1000
+numberOfSimulationRunsToGenerateData =3
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
 
@@ -130,7 +130,7 @@ for i in range(numberOfFiles):
                 currentActivitySequence.activities[IndexFollowingActivity].numberOfPreviousActivities += 1
     activitySequences.append(currentActivitySequence)
 
-stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources
+stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources + timeHorizon * numberOfResources
 
 
 # compute decisions: each decision corresponds to a start of an activity in the local reference system (more than one decision can be taken at once)
@@ -164,6 +164,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -188,9 +189,9 @@ for run in range(numberOfMainRun):
             states.append(currentStateActionPossibilityPair.state)
             actionsPossibilities.append(currentStateActionPossibilityPair.actionPossibility)
 
-    #print('state',states)
+    print('state',states)
     #print('actions:',actions)
-    #print('actionsPossibilities',actionsPossibilities)
+    print('actionsPossibilities',actionsPossibilities)
 
 
     ####  TRAIN MODEL USING TRAINING DATA  ####
@@ -232,6 +233,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -268,6 +270,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -293,6 +296,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -318,6 +322,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -346,6 +351,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
         currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
         currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
 
         currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
