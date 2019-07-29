@@ -106,7 +106,7 @@ class runSimulation_output:
         self.luckFactorMean = None
         self.trivialDecisionPercentageMean = None
         self.stateActionPairsOfBestRun = []
-        self.stateActionPossibilityPairsOfBestRun = []
+        #self.stateActionPossibilityPairsOfBestRun = []
 
 
 def runSimulation(runSimulation_input):
@@ -137,9 +137,9 @@ def runSimulation(runSimulation_input):
     luckFactors = []
     trivialDecisionPercentages = []
     stateActionPairsOfRuns = []
-    stateActionPossibilityPairsOfRun = []
+    #stateActionPossibilityPairsOfRun = []
 
-    possibleactions = possibleAction(numberOfActivitiesInStateVector)#enumerate all possible actions
+    #possibleactions = possibleAction(numberOfActivitiesInStateVector)#enumerate all possible actions
 
 
     while indexSimulationRun < numberOfSimulationRuns:
@@ -152,7 +152,7 @@ def runSimulation(runSimulation_input):
         # reset lists for run
         if purpose == "generateData":
             currentStateActionPairsOfRun = []
-            currentStateActionPossibilityPairsOfRun = []
+            #currentStateActionPossibilityPairsOfRun = []
 
         # reset dynamic variables of classes for run
         currentActivitySequence.availableResources = currentActivitySequence.totalResources[:]
@@ -427,11 +427,11 @@ def runSimulation(runSimulation_input):
 
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
                     #print('outputNeuralNetworkModel',outputNeuralNetworkModel)
-                    a = list(outputNeuralNetworkModel[0])
-                    actionsindex = a.index(max(a))
-                    priorityValues = possibleactions[actionsindex]
+                    #a = list(outputNeuralNetworkModel[0])
+                    #actionsindex = a.index(max(a))
+                    #priorityValues = possibleactions[actionsindex]
 
-                    #priorityValues = outputNeuralNetworkModel[0]
+                    priorityValues = outputNeuralNetworkModel[0]
 
                     #print('priorityValues:',priorityValues)
 
@@ -450,7 +450,7 @@ def runSimulation(runSimulation_input):
 
             # use the priority values to start new activities
             currentAction = np.zeros(numberOfActivitiesInStateVector)
-            currentActionPossibility = np.zeros(64)
+            #currentActionPossibility = np.zeros(64)
             indexStartedActivities = []
 
             # consider the decision one by one in reordered list
@@ -487,27 +487,27 @@ def runSimulation(runSimulation_input):
                             indexStartedActivities.append(indexActivityToStartGlobal)
             #print('currentAction',currentAction)
 
-            index = list(np.where(possibleactions==currentAction)[0])
-            for value in index:
-                if index.count(value)==numberOfActivitiesInStateVector:
-                    indexlocation = value
-
-            currentActionPossibility[indexlocation] = 1
+            # index = list(np.where(possibleactions==currentAction)[0])
+            # for value in index:
+            #     if index.count(value)==numberOfActivitiesInStateVector:
+            #         indexlocation = value
+            #
+            # currentActionPossibility[indexlocation] = 1
 
 
             # 1.8 if the purpose is to generate training data, save the current state action pair
             if purpose == "generateData" and trivialDecision == False:
                 currentStateActionPair = stateActionPair()
-                currentStateActionPossibilityPair = stateActionPossibilityPair()
+                #currentStateActionPossibilityPair = stateActionPossibilityPair()
 
-                currentStateActionPossibilityPair.state = currentState_readyToStartActivities
-                currentStateActionPossibilityPair.actionPossibility = currentActionPossibility
+                # currentStateActionPossibilityPair.state = currentState_readyToStartActivities
+                # currentStateActionPossibilityPair.actionPossibility = currentActionPossibility
 
                 currentStateActionPair.state = currentState_readyToStartActivities
                 currentStateActionPair.action = currentAction
 
                 currentStateActionPairsOfRun.append(currentStateActionPair)
-                currentStateActionPossibilityPairsOfRun.append(currentStateActionPossibilityPair)
+                #currentStateActionPossibilityPairsOfRun.append(currentStateActionPossibilityPair)
 
 
             ## STEP 2 ##
@@ -583,7 +583,7 @@ def runSimulation(runSimulation_input):
 
         if purpose == "generateData":
             stateActionPairsOfRuns.append(currentStateActionPairsOfRun)
-            stateActionPossibilityPairsOfRun.append(currentStateActionPossibilityPairsOfRun)
+            #stateActionPossibilityPairsOfRun.append(currentStateActionPossibilityPairsOfRun)
 
 
         # increment the index for the simulation run at the end of the loop
@@ -611,7 +611,7 @@ def runSimulation(runSimulation_input):
         if totalDurationStDev != 0:
             indexBestRun = totalDurations.index(totalDurationMin)
             currentRunSimulation_output.stateActionPairsOfBestRun = stateActionPairsOfRuns[indexBestRun]
-            currentRunSimulation_output.stateActionPossibilityPairsOfBestRun = stateActionPossibilityPairsOfRun[indexBestRun]
+            #currentRunSimulation_output.stateActionPossibilityPairsOfBestRun = stateActionPossibilityPairsOfRun[indexBestRun]
 
     #print("end " + str(currentActivitySequence.fileName[:-4]))
     #print('-------------------------------------------------------------')
