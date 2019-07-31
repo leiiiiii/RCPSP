@@ -213,13 +213,20 @@ for run in range(numberOfMainRun):
         #neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actionsPossibilities[0]), learningRate)
 
     with tf.Session() as sess:
-    # initialize all the variables
+        # initialize all the variables
         sess.run(tf.global_variables_initializer())
+
+        merged_summary = tf.summary.merge_all()
+        writer = tf.summary.FileWriter("log/")
+        writer.add_graph(sess.graph)
+
         # run the training step
         for i in range(training_step):
             if i%100 ==0:
                 accuracy = sess.run(acc,feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
                 print(accuracy)
+                s=sess.run(merged_summary,feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
+                writer.add_summary(s, i)
             sess.run(neuralNetworkModel, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
 
 
