@@ -3,6 +3,7 @@ import statistics as st
 from itertools import chain, combinations
 import numpy as np
 import itertools
+import tensorflow as tf
 
 
 #enumerate 64 possible actions
@@ -425,8 +426,13 @@ def runSimulation(runSimulation_input):
                 if policyType == "neuralNetworkModel":
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
 
-                    outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
-                    #print('outputNeuralNetworkModel',outputNeuralNetworkModel)
+                    with tf.Session() as sess:
+                        new_saver = tf.train.import_meta_graph('./saveModel/model.ckpt.meta')
+                        new_saver.restore(sess,"./saveModel/model.ckpt")
+                        outputNeuralNetworkModel = sess.run(decisionTool, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: currentState_readyToStartActivities})
+
+                    #outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
+                    print('outputNeuralNetworkModel',outputNeuralNetworkModel)
                     #a = list(outputNeuralNetworkModel[0])
                     #actionsindex = a.index(max(a))
                     #priorityValues = possibleactions[actionsindex]

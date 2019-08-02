@@ -7,6 +7,7 @@ import random
 import re
 #from NN_Model_480 import createNeuralNetworkModel
 from tensorflow_model import createNeuralNetworkModel
+from datetime import datetime
 from Env import runSimulation, runSimulation_input, activitySequence, activity
 import multiprocessing as mp
 from openpyxl import Workbook
@@ -212,12 +213,17 @@ for run in range(numberOfMainRun):
         neuralNetworkModel,acc = createNeuralNetworkModel(len(states[0]), len(actions[0]), learningRate)
         #neuralNetworkModel = createNeuralNetworkModel(len(states[0]), len(actionsPossibilities[0]), learningRate)
 
+    TIMESTAMP = "{0:%m-%d-%H-%M-%S/}".format(datetime.now())
+    log_dir = 'log2/'+ TIMESTAMP
+    saver = tf.train.Saver(max_to_keep=1)#save only one model
+    model_path = "./saveModel/model.ckpt"
+    
     with tf.Session() as sess:
         # initialize all the variables
         sess.run(tf.global_variables_initializer())
 
         merged_summary = tf.summary.merge_all()
-        writer = tf.summary.FileWriter("log/")
+        writer = tf.summary.FileWriter(log_dir)
         writer.add_graph(sess.graph)
 
         # run the training step
@@ -225,10 +231,11 @@ for run in range(numberOfMainRun):
             if i%100 ==0:
                 accuracy = sess.run(acc,feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
                 print(accuracy)
-                s=sess.run(merged_summary,feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
-                writer.add_summary(s, i)
+            s=sess.run(merged_summary,feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
+            writer.add_summary(s, i)
             sess.run(neuralNetworkModel, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
-
+        saver.save(sess,model_path)
+        writer.close()
 
     #neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True,batch_size=16,validation_set=0.2)
     #neuralNetworkModel.fit({"input": states}, {"targets": actionsPossibilities}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True, batch_size=32, validation_set=0.3)
