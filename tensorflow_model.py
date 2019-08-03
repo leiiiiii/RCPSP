@@ -34,6 +34,7 @@ def createNeuralNetworkModel(input_size, output_size, learningRate):
     with tf.name_scope("Z3"):
         Z3 = tf.matmul(O2, W3) + b3  # not activated
         tf.summary.histogram("Z3",Z3)
+        tf.add_to_collection('pred_network',Z3)
 
     # cost(calculate cost has special function,Z3 don't have to activated
     with tf.name_scope("cost"):

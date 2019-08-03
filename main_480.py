@@ -30,10 +30,10 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =1000
+numberOfSimulationRunsToGenerateData =10
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
-training_step = 5000
+training_step = 1000
 
 # train parameters
 percentageOfFilesTest = 0.1
@@ -217,7 +217,7 @@ for run in range(numberOfMainRun):
     log_dir = 'log2/'+ TIMESTAMP
     saver = tf.train.Saver(max_to_keep=1)#save only one model
     model_path = "./saveModel/model.ckpt"
-    
+
     with tf.Session() as sess:
         # initialize all the variables
         sess.run(tf.global_variables_initializer())
@@ -236,6 +236,7 @@ for run in range(numberOfMainRun):
             sess.run(neuralNetworkModel, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: states,tf.get_default_graph().get_operation_by_name('Output').outputs[0]: actions})
         saver.save(sess,model_path)
         writer.close()
+    sess.close()
 
     #neuralNetworkModel.fit({"input": states}, {"targets": actions}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True,batch_size=16,validation_set=0.2)
     #neuralNetworkModel.fit({"input": states}, {"targets": actionsPossibilities}, n_epoch=numberOfEpochs, snapshot_step=500,show_metric=True, batch_size=32, validation_set=0.3)

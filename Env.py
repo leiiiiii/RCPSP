@@ -427,19 +427,19 @@ def runSimulation(runSimulation_input):
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
 
                     with tf.Session() as sess:
-                        new_saver = tf.train.import_meta_graph('./saveModel/model.ckpt.meta')
+                        new_saver = tf.train.Saver()
                         new_saver.restore(sess,"./saveModel/model.ckpt")
-                        outputNeuralNetworkModel = sess.run(decisionTool, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: currentState_readyToStartActivities})
-
+                        prediction = tf.get_collection("pred_network")[0]
+                        outputNeuralNetworkModel = sess.run(prediction, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: currentState_readyToStartActivities})
+                        outputNeuralNetworkModel_=sess.run(tf.nn.softmax(outputNeuralNetworkModel))
                     #outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
-                    print('outputNeuralNetworkModel',outputNeuralNetworkModel)
                     #a = list(outputNeuralNetworkModel[0])
                     #actionsindex = a.index(max(a))
                     #priorityValues = possibleactions[actionsindex]
 
-                    priorityValues = outputNeuralNetworkModel[0]
+                    priorityValues = outputNeuralNetworkModel_[0]
 
-                    print('priorityValues:',priorityValues)
+                    #print('priorityValues:',priorityValues)
 
                 elif policyType == "heuristic":
                     #print("generate priority values with most critical resource")
