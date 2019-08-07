@@ -422,24 +422,25 @@ def runSimulation(runSimulation_input):
                 priorityValues = np.random.rand(numberOfActivitiesInStateVector)
 
             else:
-
                 if policyType == "neuralNetworkModel":
                     currentState_readyToStartActivities = currentState_readyToStartActivities.reshape(-1, stateVectorLength)
 
-                    with tf.Session() as sess:
-                        new_saver = tf.train.Saver()
-                        new_saver.restore(sess,"./saveModel/model.ckpt")
-                        prediction = tf.get_collection("pred_network")[0]
-                        outputNeuralNetworkModel = sess.run(prediction, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: currentState_readyToStartActivities})
-                        outputNeuralNetworkModel_=sess.run(tf.nn.softmax(outputNeuralNetworkModel))
-                    #outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
-                    #a = list(outputNeuralNetworkModel[0])
-                    #actionsindex = a.index(max(a))
-                    #priorityValues = possibleactions[actionsindex]
+                    # with tf.Session() as sess:
+                    #     new_saver = tf.train.Saver()
+                    #     new_saver.restore(sess, "./saveModel/model.ckpt")
+                    #
+                    #     prediction = tf.get_collection("pred_network")[0]
+                    #     outputNeuralNetworkModel = sess.run(prediction, feed_dict={tf.get_default_graph().get_operation_by_name('Input').outputs[0]: currentState_readyToStartActivities})
+                    #     outputNeuralNetworkModel_=sess.run(tf.nn.softmax(outputNeuralNetworkModel))
+                    outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
 
-                    priorityValues = outputNeuralNetworkModel_[0]
+                #a = list(outputNeuralNetworkModel[0])
+                #actionsindex = a.index(max(a))
+                #priorityValues = possibleactions[actionsindex]
 
-                    #print('priorityValues:',priorityValues)
+                    priorityValues = outputNeuralNetworkModel[0]
+
+                    print('priorityValues:',priorityValues)
 
                 elif policyType == "heuristic":
                     #print("generate priority values with most critical resource")

@@ -7,32 +7,32 @@ def createNeuralNetworkModel(input_size, output_size, learningRate):
     Output = tf.placeholder(tf.float32, shape=[None, output_size],name='Output')
 
     # define variables(tensors)
-    W1 = tf.get_variable('w1', [input_size, 128], initializer=tf.contrib.layers.xavier_initializer())
+    W1 = tf.get_variable('w1',[input_size, 128], initializer=tf.contrib.layers.variance_scaling_initializer(dtype=tf.float32))
     tf.summary.histogram("weight_1", W1)
-    b1 = tf.get_variable('b1', [128],initializer=tf.constant_initializer(value=0.3))
+    b1 = tf.get_variable('b1', [128],initializer=tf.constant_initializer(value=0.5))
     tf.summary.histogram("bias_1", b1)
 
-    W2 = tf.get_variable('w2', [128, 256], initializer=tf.contrib.layers.xavier_initializer())
+    W2 = tf.get_variable('w2', [128, 64], initializer=tf.contrib.layers.variance_scaling_initializer(dtype=tf.float32))
     tf.summary.histogram("weight_2", W2)
-    b2 = tf.get_variable('b2',[256] , initializer=tf.constant_initializer(value=0.15))
+    b2 = tf.get_variable('b2',[64] , initializer=tf.constant_initializer(value=0.3))
     tf.summary.histogram("bias_2", b2)
 
-    W3 = tf.get_variable('w3', [256, output_size], initializer=tf.contrib.layers.xavier_initializer())
+    W3 = tf.get_variable('w3', [64, output_size], initializer=tf.contrib.layers.variance_scaling_initializer(dtype=tf.float32))
     tf.summary.histogram("weight_3", W3)
-    b3 = tf.get_variable('b3', [output_size], initializer=tf.zeros_initializer())
+    b3 = tf.get_variable('b3', [output_size], initializer=tf.constant_initializer(value=0.1))
     tf.summary.histogram("bias_3", b3)
 
     # logits(Z)
-    O1 = tf.nn.sigmoid(tf.matmul(Input, W1) + b1, name='O1')
+    O1 = tf.nn.tanh(tf.matmul(Input, W1) + b1, name='O1')
     tf.summary.histogram("O1", O1)
     # O1 = tf.layers.dropout(O1, rate=0.2)  # dropout
 
-    O2 = tf.nn.sigmoid(tf.matmul(O1, W2) + b2, name='O2')
+    O2 = tf.nn.tanh(tf.matmul(O1, W2) + b2, name='O2')
     tf.summary.histogram("O2", O2)
-    # O2 = tf.layers.dropout(O2, rate=0.2)  # dropout
+    O2 = tf.layers.dropout(O2, rate=0.2)  # dropout
 
     with tf.name_scope("Z3"):
-        Z3 = tf.matmul(O2, W3) + b3  # not activated
+        Z3 = tf.matmul(O2, W3) + b3 # not activated
         tf.summary.histogram("Z3",Z3)
         tf.add_to_collection('pred_network',Z3)
 
@@ -48,7 +48,7 @@ def createNeuralNetworkModel(input_size, output_size, learningRate):
         tf.summary.scalar('accuracy', accuracy)
 
     with tf.name_scope("train_step"):
-        train_step = tf.train.AdamOptimizer(learning_rate=learningRate).minimize(cost)
+        train_step = tf.train.AdadeltaOptimizer(learning_rate=learningRate).minimize(cost)
 
     return train_step,accuracy
 
