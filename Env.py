@@ -440,7 +440,7 @@ def runSimulation(runSimulation_input):
 
                     priorityValues = outputNeuralNetworkModel[0]
 
-                    print('priorityValues:',priorityValues)
+                    #print('priorityValues:',priorityValues)
 
                 elif policyType == "heuristic":
                     #print("generate priority values with most critical resource")
