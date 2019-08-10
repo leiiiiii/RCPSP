@@ -9,12 +9,11 @@ numberOfActivities = 30
 
 # read all activity sequences from database
 relativePath = os.path.dirname(__file__)
-absolutePath = relativePath + "/RG30/Set 1/"
-absolutePathRCP = absolutePath + "*.rcp.txt.txt"
+absolutePath = relativePath + "/RG30/new_set/"
+absolutePathRCP = absolutePath + "*.txt"
 files = glob.glob(absolutePathRCP)
 print(files)
 for i,File in enumerate(files):
-    #print (i,File)
     #open file
     with open(File,"r") as f:
         fileName = os.path.basename(f.name)#string
@@ -22,26 +21,17 @@ for i,File in enumerate(files):
         filenumber=re.split(r'[.]',fileName)#from fileName abstract number
         print(filenumber)
         newfilename=filenumber[0]
-        # filenumber = list(map(int, filenumber))
-        # print(filenumber)
-        # if len(filenumber)==3:
-        #     fileNumber=filenumber[0]*100+filenumber[1]*10+filenumber[2]
-        # elif len(filenumber)==2:
-        #     fileNumber = filenumber[0] * 10 + filenumber[1]
-        # else:
-        #     fileNumber=filenumber[0]
-        # print(fileNumber)
-        # if fileNumber in range(10,100):
-        #     fileNumber = str(fileNumber)
-        #     fileNumber = "11" + fileNumber
-        # elif fileNumber in range(1,10):
-        #     fileNumber = str(fileNumber)
-        #     fileNumber = "110" + fileNumber
-        # else:
-        #     fileNumber=str(fileNumber)
-        # print(fileNumber)
-        #newFileName = "RG30_"
-        #newFileName += fileNumber
-        newFileName =newfilename + ".txt"
+        realnumber = re.findall(r"\d+\.?\d*",newfilename)
+        for value in realnumber:
+            a = int(value)
+            if a <10:
+                newfilename = "Pat000" + str(a)
+            elif a<100 and a>=10:
+                newfilename = "Pat00" + str(a)
+            elif a>=100 and a<1000:
+                newfilename = "Pat0" + str(a)
+            else:
+                newfilename = "Pat" + str(a)
+            newFileName =newfilename + ".txt"
         print(newFileName)
     os.rename(absolutePath + fileName, absolutePath + newFileName)
