@@ -35,7 +35,7 @@ numberOfSimulationRunsToTestPolicy = 1
 percentageOfFilesTest = 0.1
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 100 #walk entire samples
+numberOfEpochs = 50 #walk entire samples
 learningRate = 0.001
 
 # paths
@@ -501,5 +501,5 @@ ws.cell(row=2, column=21).value = sumTotalDurationWithHeuristicTest
 
 ws.cell(row=4, column=1).value = round(t_computation,2)
 
-wb.save(relativePath + "/database_RG30/1000_futureResource2.xlsx")
+wb.save(relativePath + "/database_RG30/test_futureResource50.xlsx")
 
