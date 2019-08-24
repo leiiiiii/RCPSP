@@ -28,15 +28,15 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =1000
+numberOfSimulationRunsToGenerateData =2000
 numberOfSimulationRunsToTestPolicy = 1
 
 # train parameters
 percentageOfFilesTest = 0.1
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 50 #walk entire samples
-learningRate = 0.001
+numberOfEpochs = 100 #walk entire samples
+learningRate = 0.0005
 
 # paths
 relativePath = os.path.dirname(__file__)
@@ -196,7 +196,7 @@ for i in range(numberOfFilesTrain):
         actions.append(currentStateActionPair.action)
 
 
-    #correspondence best states and actions pairs --> len(states) = len(actions)
+#correspondence best states and actions pairs --> len(states) = len(actions)
 #print('state',states)
 #print('actions:',actions)
 
@@ -425,15 +425,17 @@ ws['J2'] = 'test Topology name'
 ws['C1'] = numberOfSimulationRunsToGenerateData
 ws['D1'] = 'train Solution random'
 ws['H1'] = 'train policy'
+ws['I1'] = 'train heuristic'
 ws['K1'] = 'test Solution random'
 ws['O1'] = 'test policy'
 ws['P1'] = 'test heuristic'
 ws['A3'] = 'computation time'
-ws['Q1'] = 'sumTotalDurationRandomTrain'
-ws['R1'] = 'sumTotalDurationWithNeuralNetworkModelTrain'
-ws['S1'] = 'sumTotalDurationRandomTest'
-ws['T1'] = 'sumTotalDurationWithNeuralNetworkModelTest'
-ws['U1'] = 'sumTotalDurationWithHeuristicTest'
+ws['Q1'] = 'sumRandomTr'
+ws['R1'] = 'sumNNTr'
+ws['S1'] = 'sumHeuristicTr'
+ws['T1'] = 'sumRandomTe'
+ws['U1'] = 'sumNNTe'
+ws['V1'] = 'sumHeuristicTe'
 
 #Train data
 ws['D2'] = 'E[T]'
@@ -441,6 +443,7 @@ ws['E2'] = 'StDev[T]'
 ws['F2'] = 'Min[T]'
 ws['G2'] = 'Max[T]'
 ws['H2'] = '[T]'
+ws['I2'] = '[T]'
 
 #Test data
 ws['K2'] = 'E[T]'
@@ -458,19 +461,31 @@ ws.column_dimensions['B'].width = 11.0
 ws.column_dimensions['J'].width = 11.0
 ws.column_dimensions['H'].width = 11.0
 ws.column_dimensions['O'].width = 11.0
-ws.column_dimensions['P'].width = 11.0
+ws.column_dimensions['P'].width = 13.0
+ws.column_dimensions['I'].width = 13.0
+ws.column_dimensions['Q'].width = 14.0
+ws.column_dimensions['R'].width = 14.0
+ws.column_dimensions['S'].width = 14.0
+ws.column_dimensions['T'].width = 14.0
+ws.column_dimensions['U'].width = 14.0
+ws.column_dimensions['V'].width = 14.0
 ws.row_dimensions[2].height = 45
-#
+ws.row_dimensions[1].height = 30
+
 #alignment can be accessed only per cell
 align = Alignment(horizontal='center',vertical='center',wrap_text=True)
+ws['A1'].alignment = align
 ws['D1'].alignment = align
 ws['K1'].alignment = align
 ws['H1'].alignment = align
 ws['O1'].alignment = align
 ws['P1'].alignment = align
-for item in ws['A2:P2'][0]:
+ws['I1'].alignment = align
+for item in ws['A2:V2'][0]:
     item.alignment = align
 
+for item in ws['Q1:V1'][0]:
+    item.alignment = align
 
 # ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+3, column=1).value = "computation time"
 # ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+4, column=1).value = t_computation
@@ -482,6 +497,7 @@ for i in range(numberOfFilesTrain):
     ws.cell(row=i+3, column=7).value = activitySequences[indexFilesTrain[i]].totalDurationMax
     #using NN_Model results
     ws.cell(row=i + 3, column=8).value = activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
+    ws.cell(row=i + 3, column=9).value = activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic
 
 for i in range(numberOfFilesTest):
     ws.cell(row=i + 3, column=10).value = activitySequences[indexFilesTest[i]].fileName[:-4]
@@ -495,11 +511,13 @@ for i in range(numberOfFilesTest):
 
 ws.cell(row=2, column=17).value = sumTotalDurationRandomTrain
 ws.cell(row=2, column=18).value = sumTotalDurationWithNeuralNetworkModelTrain
-ws.cell(row=2, column=19).value = sumTotalDurationRandomTest
-ws.cell(row=2, column=20).value = sumTotalDurationWithNeuralNetworkModelTest
-ws.cell(row=2, column=21).value = sumTotalDurationWithHeuristicTest
+ws.cell(row=2, column=19).value = sumTotalDurationWithHeuristicTrain
+ws.cell(row=2, column=20).value = sumTotalDurationRandomTest
+ws.cell(row=2, column=21).value = sumTotalDurationWithNeuralNetworkModelTest
+ws.cell(row=2, column=22).value = sumTotalDurationWithHeuristicTest
+
 
 ws.cell(row=4, column=1).value = round(t_computation,2)
 
-wb.save(relativePath + "/database_RG30/test_futureResource50.xlsx")
+wb.save(relativePath + "/database_RG30/test_futureResource2.xlsx")
 
