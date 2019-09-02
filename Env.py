@@ -48,7 +48,8 @@ class activitySequence:
         self.totalDurationMax = None
         self.luckFactorMean = None
         self.totalDurationWithPolicy = None
-        self.totalDurationWithHeuristic = None
+        self.totalDurationWithCriticalResource = None
+        self.totalDurationWithShortestProcessingTime = None
         self.trivialDecisionPercentageMean = None
 
 
@@ -197,7 +198,6 @@ def runSimulation(runSimulation_input):
             trivialDecision = True
             indexReadyToStartActivitiesInState = indexReadyToStartActivities[0:min(numberOfActivitiesInStateVector,len(indexReadyToStartActivities))]
 
-            #print('indexReadyToStartActivitiesInState',indexReadyToStartActivitiesInState)
 
             # compute powerset of decisions_indexActivity
             indexReadyToStartActivitiesPowerset = list(powerset(indexReadyToStartActivitiesInState))
@@ -246,36 +246,49 @@ def runSimulation(runSimulation_input):
                 for i in range(len(indexReadyToStartActivitiesInState)):
                     activityConversionVector[i] = indexReadyToStartActivitiesInState[i]
             else:
-                # conversion is required
-                # find most critical resources (i.e. required resources to start the ready to start activities normalized by the total resources)
-                resourceNeedForReadyToStartActivities = [0] * numberOfResources
-                for i in indexReadyToStartActivities:
-                    for j in range(numberOfResources):
-                        resourceNeedForReadyToStartActivities[j] += currentActivitySequence.activities[i].requiredResources[j] / currentActivitySequence.totalResources[j]
+                if policyType == "shortest processing time":
+                    # find the shortest duration activity to start
+                    durationForReadyToStartActivities = [0] * numberOfActivitiesInStateVector
+
+                    for i in range(len(indexReadyToStartActivitiesInState)):
+                        durationForReadyToStartActivities[i] = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].time
 
 
-                # create resourceConversionVector
-                indexResourcesGlobal = list(range(0,numberOfResources))
-                indexResourcesGlobal_reordered = [x for _, x in sorted(zip(resourceNeedForReadyToStartActivities, indexResourcesGlobal), reverse=True)]
-                resourceConversionVector = indexResourcesGlobal_reordered
-                #print('resourceConversionvector',resourceConversionVector)
+                    indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
+                    indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
+                    indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(durationForReadyToStartActivities, indexActivitiesGlobal), reverse=False)]
+                    activityConversionVector = indexActivitiesGlobal_reordered
+                    resourceConversionVector = list(range(0,numberOfResources))
 
 
-                # reorder activities depending on resource utilisation
-                activityScores = [-1] * numberOfActivitiesInStateVector
-
-                for i in range(len(indexReadyToStartActivitiesInState)):
-                    for j in range(len(resourceConversionVector)):
-                        resourceMultiplicator = 100 ** (numberOfResources-j-1)
-                        resourceQuantity = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].requiredResources[resourceConversionVector[j]]
-                        activityScores[i] += 1 + resourceMultiplicator * resourceQuantity
+                else:
+                    # find most critical resources (i.e. required resources to start the ready to start activities normalized by the total resources)
+                    resourceNeedForReadyToStartActivities = [0] * numberOfResources
+                    for i in indexReadyToStartActivities:
+                        for j in range(numberOfResources):
+                            resourceNeedForReadyToStartActivities[j] += currentActivitySequence.activities[i].requiredResources[j] / currentActivitySequence.totalResources[j]
 
 
-                indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
-                indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
-                indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(activityScores, indexActivitiesGlobal), reverse=True)]
-                activityConversionVector = indexActivitiesGlobal_reordered
-            #print(activityConversionVector)
+                    # create resourceConversionVector
+                    indexResourcesGlobal = list(range(0,numberOfResources))
+                    indexResourcesGlobal_reordered = [x for _, x in sorted(zip(resourceNeedForReadyToStartActivities, indexResourcesGlobal), reverse=True)]
+                    resourceConversionVector = indexResourcesGlobal_reordered
+
+
+                    # reorder activities depending on resource utilisation
+                    activityScores = [-1] * numberOfActivitiesInStateVector
+
+                    for i in range(len(indexReadyToStartActivitiesInState)):
+                        for j in range(len(resourceConversionVector)):
+                            resourceMultiplicator = 100 ** (numberOfResources-j-1)
+                            resourceQuantity = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].requiredResources[resourceConversionVector[j]]
+                            activityScores[i] += 1 + resourceMultiplicator * resourceQuantity
+
+
+                    indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
+                    indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
+                    indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(activityScores, indexActivitiesGlobal), reverse=True)]
+                    activityConversionVector = indexActivitiesGlobal_reordered
 
 
             # 1.4 normalized state vector and matrix are created
@@ -299,8 +312,6 @@ def runSimulation(runSimulation_input):
                 #print('currentState_readyToStartActivitie',currentState_readyToStartActivities)
 
                 # 1.4.1 add future resourceUtilisation for active activities
-
-
                 indexReadyToActiveActivities = []
                 # indexAlreadyStartedActivities=[]
                 # for i in range(numberOfActivities):
@@ -315,7 +326,6 @@ def runSimulation(runSimulation_input):
                 #add ready to start activities in indexStartToActiveActivities
                 for n in indexReadyToStartActivitiesInState:
                     indexReadyToActiveActivities.append(n)
-                #print('indexReadyToActiveActivities',indexReadyToActiveActivities)
 
                 # generate timeHorizonMatrix for ReadytoActive activities
                 timeHorizonMatrix = np.zeros((len(indexReadyToActiveActivities), timeHorizon))
@@ -331,7 +341,7 @@ def runSimulation(runSimulation_input):
                     timeHorizonMatrix[i][0:j] = 1
 
 
-                # generate resourceUtilizationMatrix for active activities
+                # generate resourceUtilizationMatrix for ReadytoActive activities
                 resourcematrix = np.zeros((1, numberOfResources))
 
                 for i in indexReadyToActiveActivities:
@@ -347,7 +357,6 @@ def runSimulation(runSimulation_input):
                 # 1.4.2 add future resourceUtilisation for following activities
                 for i in indexReadyToActiveActivities:
                     indexFollowingActivities = currentActivitySequence.activities[i].indexFollowingActivities
-                #print('indexFollowingActivities',indexFollowingActivities)
 
                 # generate timeHorizonMatrix for following activities (timeHorizon starts maximaltimeHorizon)
 
@@ -401,7 +410,6 @@ def runSimulation(runSimulation_input):
                     for j in range(timeHorizon):
                         currentState_futureResourceUtilisation[i][j]=currentState_futureResourceUtilisation[i][j]/currentActivitySequence.totalResources[i]
 
-                #print('currentState_futureResourceUtilisation_1', currentState_futureResourceUtilisation)
 
                 resourceConversionVector = np.array(resourceConversionVector)
 
@@ -409,12 +417,10 @@ def runSimulation(runSimulation_input):
 
                 currentStateFuturnResourceUtilisation = currentState_futureResourceUtilisation.flatten()
 
-                #print('currentState_futureResourceUtilisation_2', currentStateFuturnResourceUtilisation)
 
                 for i in range(timeHorizon*numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources + i]=currentStateFuturnResourceUtilisation[i]
 
-                #print('currentState_readyToStartActivities_3',currentState_readyToStartActivities)
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
             randomDecisionAtThisStep = (random.random() < randomDecisionProbability)
@@ -439,26 +445,28 @@ def runSimulation(runSimulation_input):
                     #     outputNeuralNetworkModel_=sess.run(tf.nn.softmax(outputNeuralNetworkModel))
                     outputNeuralNetworkModel = decisionTool.predict(currentState_readyToStartActivities)
 
-                #a = list(outputNeuralNetworkModel[0])
-                #actionsindex = a.index(max(a))
-                #priorityValues = possibleactions[actionsindex]
+                    #a = list(outputNeuralNetworkModel[0])
+                    #actionsindex = a.index(max(a))
+                    #priorityValues = possibleactions[actionsindex]
 
                     priorityValues = outputNeuralNetworkModel[0]
 
                     #print('priorityValues:',priorityValues)
 
-                elif policyType == "heuristic":
-                    #print("generate priority values with most critical resource")
+                elif policyType == "most critical resource":
                     priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
 
-                elif policyType == "otherPolicy2":
-                    print("generate priority values with other policy 2")
+                elif policyType == "shortest processing time":
+                    priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
+
+
                 else:
                     print("policy name not existing")
 
 
             # reorder list according to priority
             decisions_indexActivity_reordered = [x for _, x in sorted(zip(priorityValues,decisions_indexActivity), reverse=True)]
+
 
             # use the priority values to start new activities
             currentAction = np.zeros(numberOfActivitiesInStateVector)
@@ -468,6 +476,7 @@ def runSimulation(runSimulation_input):
             # consider the decision one by one in reordered list
             for indexActivityToStartLocal in decisions_indexActivity_reordered:
                 indexActivityToStartGlobal = activityConversionVector[indexActivityToStartLocal]
+
 
                 if indexActivityToStartGlobal != -1:
                     currentActivity = currentActivitySequence.activities[indexActivityToStartGlobal]
@@ -497,7 +506,7 @@ def runSimulation(runSimulation_input):
                             # update the action vector with the activity that has been just started
                             currentAction[indexActivityToStartLocal] = 1
                             indexStartedActivities.append(indexActivityToStartGlobal)
-            #print('currentAction',currentAction)
+
 
             # index = list(np.where(possibleactions==currentAction)[0])
             # for value in index:
@@ -533,7 +542,6 @@ def runSimulation(runSimulation_input):
                     if currentActivitySequence.activities[i].remainingTime < smallestRemainingTime:
                         smallestRemainingTime = currentActivitySequence.activities[i].remainingTime
 
-            #print('indexActiveActivities', indexActiveActivities)
 
             # 2.2 find next finishing activities
             indexNextFinishingActivities = []
@@ -570,9 +578,6 @@ def runSimulation(runSimulation_input):
                 currentActivitySequence.activities[i].seizedResources = [0] * numberOfResources
                 for j in range(numberOfResources):
                     currentActivitySequence.availableResources[j] += currentActivitySequence.activities[i].requiredResources[j]
-
-            #print('indexFollowingActivities',indexFollowingActivities)
-
 
 
             ## STEP 4 ##

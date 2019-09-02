@@ -33,7 +33,7 @@ timeHorizon = 10
 numberOfSimulationRunsToGenerateData =1000
 numberOfSimulationRunsToTestPolicy = 1
 numberOfMainRun = 1
-#training_step = 5000
+
 
 # train parameters
 percentageOfFilesTest = 0.1
@@ -44,7 +44,6 @@ learningRate = 0.0005
 
 # paths
 relativePath = os.path.dirname(__file__)
-# absolutePathProjects = relativePath + "/RG30_merged/"
 absolutePathProjects = relativePath + "/J30/"
 
 
@@ -62,10 +61,12 @@ actions = []
 #actionsPossibilities = []
 sumTotalDurationRandomTestRecord = []
 sumTotalDurationWithNeuralNetworkModelTestRecord = []
-sumTotalDurationWithHeuristicTestRecord = []
+sumTotalDurationWithCriticalResourceTestRecord = []
+sumTotalDurationWithShortestProcessingTestRecord = []
 sumTotalDurationRandomTrainRecord = []
 sumTotalDurationWithNeuralNetworkModelTrainRecord = []
-sumTotalDurationWithHeuristicTrainRecord = []
+sumTotalDurationWithCriticalResourceTrainRecord = []
+sumTotalDurationWithShortestProcessingTrainRecord = []
 
 
 # read all activity sequences from database
@@ -331,9 +332,9 @@ for run in range(numberOfMainRun):
         activitySequences[indexFilesTest[i]].totalDurationWithPolicy = currentRunSimulation_output.totalDurationMean
 
 
-    #---------------------------------------------------------Heuristic----------------------------------------------------------------------------
-        ####  TEST HEURISTIC METHOD ON TRAIN ACTIVITY SEQUENCES  ####
-    print('###### HEURISTIC METHOD ON TRAIN ACTIVITY SEQUENCES  ######')
+    #---------------------------------------------------------Critical Resource----------------------------------------------------------------------------
+        ####  TEST CRITICAL RESOURCE METHOD ON TRAIN ACTIVITY SEQUENCES  ####
+    print('###### CRITICAL RESOURCE METHOD ON TRAIN ACTIVITY SEQUENCES  ######')
     runSimulation_inputs = []
     for i in range(numberOfFilesTrain):
         currentRunSimulation_input = runSimulation_input()
@@ -342,7 +343,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "testPolicy"
         currentRunSimulation_input.randomDecisionProbability = 0
-        currentRunSimulation_input.policyType = "heuristic"
+        currentRunSimulation_input.policyType = "most critical resource"
         currentRunSimulation_input.decisionTool = None
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
@@ -359,11 +360,11 @@ for run in range(numberOfMainRun):
     runSimulation_outputs = pool.map(runSimulation, runSimulation_inputs)
     # assign simulation results to activity sequences
     for i in range(numberOfFilesTrain):
-        activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic = runSimulation_outputs[i].totalDurationMean
+        activitySequences[indexFilesTrain[i]].totalDurationWithCriticalResource = runSimulation_outputs[i].totalDurationMean
 
 
-    ####  TEST HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ####
-    print('###### HEURISTIC METHOD ON TEST ACTIVITY SEQUENCES  ######')
+    ####  TEST CRITICAL RESOURCE METHOD ON TEST ACTIVITY SEQUENCES  ####
+    print('###### CRITICAL RESOURCE METHOD ON TEST ACTIVITY SEQUENCES  ######')
     for i in range(numberOfFilesTest):
         currentRunSimulation_input = runSimulation_input()
         currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
@@ -371,7 +372,7 @@ for run in range(numberOfMainRun):
         currentRunSimulation_input.timeDistribution = timeDistribution
         currentRunSimulation_input.purpose = "testPolicy"
         currentRunSimulation_input.randomDecisionProbability = 0
-        currentRunSimulation_input.policyType = "heuristic"
+        currentRunSimulation_input.policyType = "most critical resource"
         currentRunSimulation_input.decisionTool = None
         currentRunSimulation_input.numberOfResources = numberOfResources
         currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
@@ -383,47 +384,115 @@ for run in range(numberOfMainRun):
 
         currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
-        activitySequences[indexFilesTest[i]].totalDurationWithHeuristic = currentRunSimulation_output.totalDurationMean
+        activitySequences[indexFilesTest[i]].totalDurationWithCriticalResource = currentRunSimulation_output.totalDurationMean
+
+
+
+
+    # ---------------------------------------------------------Shortest Processing Time----------------------------------------------------------------------------
+    ####  TEST SHORTEST PROCESSING TIME METHOD ON TRAIN ACTIVITY SEQUENCES  ####
+    print('###### SHORTEST PROCESSING TIME METHOD ON TRAIN ACTIVITY SEQUENCES  ######')
+    runSimulation_inputs = []
+    for i in range(numberOfFilesTrain):
+        currentRunSimulation_input = runSimulation_input()
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTrain[i]]
+        currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+        currentRunSimulation_input.timeDistribution = timeDistribution
+        currentRunSimulation_input.purpose = "testPolicy"
+        currentRunSimulation_input.randomDecisionProbability = 0
+        currentRunSimulation_input.policyType = "shortest processing time"
+        currentRunSimulation_input.decisionTool = None
+        currentRunSimulation_input.numberOfResources = numberOfResources
+        currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+        currentRunSimulation_input.stateVectorLength = stateVectorLength
+        currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+        currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+        currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
+
+        runSimulation_inputs.append(currentRunSimulation_input)
+
+    pool = mp.Pool(processes=numberOfCpuProcessesToGenerateData)
+
+    runSimulation_outputs = pool.map(runSimulation, runSimulation_inputs)
+    # assign simulation results to activity sequences
+    for i in range(numberOfFilesTrain):
+        activitySequences[indexFilesTrain[i]].totalDurationWithShortestProcessingTime = runSimulation_outputs[i].totalDurationMean
+
+    ####  TEST SHORTEST PROCESSING TIME METHOD ON TEST ACTIVITY SEQUENCES  ####
+    print('###### SHORTEST PROCESSING TIME METHOD ON TEST ACTIVITY SEQUENCES  ######')
+    for i in range(numberOfFilesTest):
+        currentRunSimulation_input = runSimulation_input()
+        currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
+        currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+        currentRunSimulation_input.timeDistribution = timeDistribution
+        currentRunSimulation_input.purpose = "testPolicy"
+        currentRunSimulation_input.randomDecisionProbability = 0
+        currentRunSimulation_input.policyType = "shortest processing time"
+        currentRunSimulation_input.decisionTool = None
+        currentRunSimulation_input.numberOfResources = numberOfResources
+        currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+        currentRunSimulation_input.stateVectorLength = stateVectorLength
+        currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+        currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+        currentRunSimulation_input.numberOfActivities = numberOfActivities
+        currentRunSimulation_input.timeHorizon = timeHorizon
+
+        currentRunSimulation_output = runSimulation(currentRunSimulation_input)
+
+        activitySequences[indexFilesTest[i]].totalDurationWithShortestProcessingTime = currentRunSimulation_output.totalDurationMean
 
 
 
     #------------------------------------------------------EVALUATION-----------------------------------------------------------------------------
     ####  EVALUATION OF RESULTS OF TRAIN ACTIVITY SEQUENCES  ####
     sumTotalDurationRandomTrain = 0
-    sumTotalDurationWithHeuristicTrain = 0
+    sumTotalDurationWithCriticalResourceTrain = 0
+    sumTotalDurationWithShortestProcessingTrain = 0
     sumTotalDurationWithNeuralNetworkModelTrain = 0
 
     for i in range(numberOfFilesTrain):
         sumTotalDurationRandomTrain += activitySequences[indexFilesTrain[i]].totalDurationMean
         sumTotalDurationRandomTrain = round(sumTotalDurationRandomTrain,4)
         sumTotalDurationWithNeuralNetworkModelTrain += activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
-        sumTotalDurationWithHeuristicTrain += activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic
+        sumTotalDurationWithCriticalResourceTrain += activitySequences[indexFilesTrain[i]].totalDurationWithCriticalResource
+        sumTotalDurationWithShortestProcessingTrain += activitySequences[indexFilesTrain[i]].totalDurationWithShortestProcessingTime
 
     sumTotalDurationRandomTrainRecord.append(sumTotalDurationRandomTrain)
     sumTotalDurationWithNeuralNetworkModelTrainRecord.append(sumTotalDurationWithNeuralNetworkModelTrain)
-    sumTotalDurationWithHeuristicTrainRecord.append(sumTotalDurationWithHeuristicTrain)
+    sumTotalDurationWithCriticalResourceTrainRecord.append(sumTotalDurationWithCriticalResourceTrain)
+    sumTotalDurationWithShortestProcessingTrainRecord.append(sumTotalDurationWithShortestProcessingTrain)
 
     ####  EVALUATION OF NN RESULTS OF TEST ACTIVITY SEQUENCES  ####
     sumTotalDurationRandomTest = 0
     sumTotalDurationWithNeuralNetworkModelTest = 0
-    sumTotalDurationWithHeuristicTest = 0
+    sumTotalDurationWithCriticalResourceTest = 0
+    sumTotalDurationWithShortestProcessingTest = 0
+
 
     for i in range(numberOfFilesTest):
         sumTotalDurationRandomTest += activitySequences[indexFilesTest[i]].totalDurationMean
         sumTotalDurationRandomTest = round(sumTotalDurationRandomTest,4)
         sumTotalDurationWithNeuralNetworkModelTest += activitySequences[indexFilesTest[i]].totalDurationWithPolicy
-        sumTotalDurationWithHeuristicTest += activitySequences[indexFilesTest[i]].totalDurationWithHeuristic
+        sumTotalDurationWithCriticalResourceTest += activitySequences[indexFilesTest[i]].totalDurationWithCriticalResource
+        sumTotalDurationWithShortestProcessingTest += activitySequences[indexFilesTest[i]].totalDurationWithShortestProcessingTime
+
 
     sumTotalDurationRandomTestRecord.append(sumTotalDurationRandomTest)
     sumTotalDurationWithNeuralNetworkModelTestRecord.append(sumTotalDurationWithNeuralNetworkModelTest)
-    sumTotalDurationWithHeuristicTestRecord.append(sumTotalDurationWithHeuristicTest)
+    sumTotalDurationWithCriticalResourceTestRecord.append(sumTotalDurationWithCriticalResourceTest)
+    sumTotalDurationWithShortestProcessingTestRecord.append(sumTotalDurationWithShortestProcessingTest)
+
+
 
     print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
     print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
-    print("sumTotalDurationWithHeuristicTrain = " + str(sumTotalDurationWithHeuristicTrain))
+    print("sumTotalDurationWithCriticalResourceTrain = " + str(sumTotalDurationWithCriticalResourceTrain))
+    print("sumTotalDurationWithShortestProcessingTrain = " + str(sumTotalDurationWithShortestProcessingTrain))
     print("sumTotalDurationRandomTest = " + str(sumTotalDurationRandomTest))
     print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWithNeuralNetworkModelTest))
-    print("sumTotalDurationWithHeuristicTest = " + str(sumTotalDurationWithHeuristicTest))
+    print("sumTotalDurationWithCriticalResourceTest = " + str(sumTotalDurationWithCriticalResourceTest))
+    print("sumTotalDurationWithShortestProcessingTest = " + str(sumTotalDurationWithShortestProcessingTest))
 
 
     # compute computation time
@@ -450,7 +519,7 @@ for run in range(numberOfMainRun):
 #     ws.cell(row=run + 2, column=6).value = sumTotalDurationWithNeuralNetworkModelTestRecord[0]
 #     ws.cell(row=run + 2, column=1).value = sumTotalDurationRandomTrainRecord[0]
 #     ws.cell(row=run + 2, column=2).value = sumTotalDurationWithNeuralNetworkModelTrainRecord[0]
-#     ws.cell(row=run + 2, column=8).value = sumTotalDurationWithHeuristicTestRecord[0]
+#     ws.cell(row=run + 2, column=8).value = sumtotalDurationWithCriticalResourceTestRecord[0]
 #     ws.cell(row=run + 2, column=3).value = 1
 #     ws.cell(row=run + 2, column=5).value = 2
 #     ws.cell(row=run + 2, column=7).value = 3
@@ -475,117 +544,117 @@ for run in range(numberOfMainRun):
 
 #---------------------------------------------------------------write every topology---------------------------------------------------------------------------#
 #write ouput to excel
-wb = Workbook()
-ws = wb.create_sheet('J30_duration',0)
-
-#combine rows
-ws.merge_cells('A1:B1')
-ws.merge_cells('D1:G1')
-ws.merge_cells('K1:N1')
-
-#name it
-ws['A1'] = 'number of simulation runs'
-# ws['A2'] = 'Prob[number of ready to start activity]'
-ws['B2'] = 'train Topology name'
-ws['J2'] = 'test Topology name'
-ws['C1'] = numberOfSimulationRunsToGenerateData
-ws['D1'] = 'train Solution random'
-ws['H1'] = 'train policy'
-ws['I1'] = 'train heuristic'
-ws['K1'] = 'test Solution random'
-ws['O1'] = 'test policy'
-ws['P1'] = 'test heuristic'
-ws['A3'] = 'computation time'
-ws['Q1'] = 'sumRandomTr'
-ws['R1'] = 'sumNNTr'
-ws['S1'] = 'sumHeuristicTr'
-ws['T1'] = 'sumRandomTe'
-ws['U1'] = 'sumNNTe'
-ws['V1'] = 'sumHeuristicTe'
-
-#Train data
-ws['D2'] = 'E[T]'
-ws['E2'] = 'StDev[T]'
-ws['F2'] = 'Min[T]'
-ws['G2'] = 'Max[T]'
-ws['H2'] = '[T]'
-ws['I2'] = '[T]'
-
-#Test data
-ws['K2'] = 'E[T]'
-ws['L2'] = 'StDev[T]'
-ws['M2'] = 'Min[T]'
-ws['N2'] = 'Max[T]'
-ws['O2'] = '[T]'
-ws['P2'] = '[T]'
-
-
-
-#change column width and height
-ws.column_dimensions['A'].width = 17.0
-ws.column_dimensions['B'].width = 11.0
-ws.column_dimensions['J'].width = 11.0
-ws.column_dimensions['H'].width = 11.0
-ws.column_dimensions['O'].width = 11.0
-ws.column_dimensions['P'].width = 13.0
-ws.column_dimensions['I'].width = 13.0
-ws.column_dimensions['Q'].width = 14.0
-ws.column_dimensions['R'].width = 14.0
-ws.column_dimensions['S'].width = 14.0
-ws.column_dimensions['T'].width = 14.0
-ws.column_dimensions['U'].width = 14.0
-ws.column_dimensions['V'].width = 14.0
-ws.row_dimensions[2].height = 45
-ws.row_dimensions[1].height = 30
-
-#alignment can be accessed only per cell
-align = Alignment(horizontal='center',vertical='center',wrap_text=True)
-ws['A1'].alignment = align
-ws['D1'].alignment = align
-ws['K1'].alignment = align
-ws['H1'].alignment = align
-ws['O1'].alignment = align
-ws['P1'].alignment = align
-ws['I1'].alignment = align
-for item in ws['A2:V2'][0]:
-    item.alignment = align
-
-for item in ws['Q1:V1'][0]:
-    item.alignment = align
-
-# ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+3, column=1).value = "computation time"
-# ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+4, column=1).value = t_computation
-for i in range(numberOfFilesTrain):
-    ws.cell(row=i+3, column=2).value = activitySequences[indexFilesTrain[i]].fileName[:-4]
-    ws.cell(row=i+3, column=4).value = activitySequences[indexFilesTrain[i]].totalDurationMean
-    ws.cell(row=i+3, column=5).value = activitySequences[indexFilesTrain[i]].totalDurationStandardDeviation
-    ws.cell(row=i+3, column=6).value = activitySequences[indexFilesTrain[i]].totalDurationMin
-    ws.cell(row=i+3, column=7).value = activitySequences[indexFilesTrain[i]].totalDurationMax
-    #using NN_Model results
-    ws.cell(row=i + 3, column=8).value = activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
-    ws.cell(row=i + 3, column=9).value = activitySequences[indexFilesTrain[i]].totalDurationWithHeuristic
-
-for i in range(numberOfFilesTest):
-    ws.cell(row=i + 3, column=10).value = activitySequences[indexFilesTest[i]].fileName[:-4]
-    ws.cell(row=i + 3, column=11).value = activitySequences[indexFilesTest[i]].totalDurationMean
-    ws.cell(row=i + 3, column=12).value = activitySequences[indexFilesTest[i]].totalDurationStandardDeviation
-    ws.cell(row=i + 3, column=13).value = activitySequences[indexFilesTest[i]].totalDurationMin
-    ws.cell(row=i + 3, column=14).value = activitySequences[indexFilesTest[i]].totalDurationMax
-    # using NN_Model results
-    ws.cell(row=i + 3, column=15).value = activitySequences[indexFilesTest[i]].totalDurationWithPolicy
-    ws.cell(row=i + 3, column=16).value = activitySequences[indexFilesTest[i]].totalDurationWithHeuristic
-
-ws.cell(row=2, column=17).value = sumTotalDurationRandomTrain
-ws.cell(row=2, column=18).value = sumTotalDurationWithNeuralNetworkModelTrain
-ws.cell(row=2, column=19).value = sumTotalDurationWithHeuristicTrain
-ws.cell(row=2, column=20).value = sumTotalDurationRandomTest
-ws.cell(row=2, column=21).value = sumTotalDurationWithNeuralNetworkModelTest
-ws.cell(row=2, column=22).value = sumTotalDurationWithHeuristicTest
-
-
-ws.cell(row=4, column=1).value = round(t_computation,2)
-
-wb.save(relativePath + "/database_480/test_futureResource2.xlsx")
+# wb = Workbook()
+# ws = wb.create_sheet('J30_duration',0)
+#
+# #combine rows
+# ws.merge_cells('A1:B1')
+# ws.merge_cells('D1:G1')
+# ws.merge_cells('K1:N1')
+#
+# #name it
+# ws['A1'] = 'number of simulation runs'
+# # ws['A2'] = 'Prob[number of ready to start activity]'
+# ws['B2'] = 'train Topology name'
+# ws['J2'] = 'test Topology name'
+# ws['C1'] = numberOfSimulationRunsToGenerateData
+# ws['D1'] = 'train Solution random'
+# ws['H1'] = 'train policy'
+# ws['I1'] = 'train heuristic'
+# ws['K1'] = 'test Solution random'
+# ws['O1'] = 'test policy'
+# ws['P1'] = 'test heuristic'
+# ws['A3'] = 'computation time'
+# ws['Q1'] = 'sumRandomTr'
+# ws['R1'] = 'sumNNTr'
+# ws['S1'] = 'sumHeuristicTr'
+# ws['T1'] = 'sumRandomTe'
+# ws['U1'] = 'sumNNTe'
+# ws['V1'] = 'sumHeuristicTe'
+#
+# #Train data
+# ws['D2'] = 'E[T]'
+# ws['E2'] = 'StDev[T]'
+# ws['F2'] = 'Min[T]'
+# ws['G2'] = 'Max[T]'
+# ws['H2'] = '[T]'
+# ws['I2'] = '[T]'
+#
+# #Test data
+# ws['K2'] = 'E[T]'
+# ws['L2'] = 'StDev[T]'
+# ws['M2'] = 'Min[T]'
+# ws['N2'] = 'Max[T]'
+# ws['O2'] = '[T]'
+# ws['P2'] = '[T]'
+#
+#
+#
+# #change column width and height
+# ws.column_dimensions['A'].width = 17.0
+# ws.column_dimensions['B'].width = 11.0
+# ws.column_dimensions['J'].width = 11.0
+# ws.column_dimensions['H'].width = 11.0
+# ws.column_dimensions['O'].width = 11.0
+# ws.column_dimensions['P'].width = 13.0
+# ws.column_dimensions['I'].width = 13.0
+# ws.column_dimensions['Q'].width = 14.0
+# ws.column_dimensions['R'].width = 14.0
+# ws.column_dimensions['S'].width = 14.0
+# ws.column_dimensions['T'].width = 14.0
+# ws.column_dimensions['U'].width = 14.0
+# ws.column_dimensions['V'].width = 14.0
+# ws.row_dimensions[2].height = 45
+# ws.row_dimensions[1].height = 30
+#
+# #alignment can be accessed only per cell
+# align = Alignment(horizontal='center',vertical='center',wrap_text=True)
+# ws['A1'].alignment = align
+# ws['D1'].alignment = align
+# ws['K1'].alignment = align
+# ws['H1'].alignment = align
+# ws['O1'].alignment = align
+# ws['P1'].alignment = align
+# ws['I1'].alignment = align
+# for item in ws['A2:V2'][0]:
+#     item.alignment = align
+#
+# for item in ws['Q1:V1'][0]:
+#     item.alignment = align
+#
+# # ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+3, column=1).value = "computation time"
+# # ws.cell(row=len_probabilityDistributionNumberOfReadyToStartActivities+4, column=1).value = t_computation
+# for i in range(numberOfFilesTrain):
+#     ws.cell(row=i+3, column=2).value = activitySequences[indexFilesTrain[i]].fileName[:-4]
+#     ws.cell(row=i+3, column=4).value = activitySequences[indexFilesTrain[i]].totalDurationMean
+#     ws.cell(row=i+3, column=5).value = activitySequences[indexFilesTrain[i]].totalDurationStandardDeviation
+#     ws.cell(row=i+3, column=6).value = activitySequences[indexFilesTrain[i]].totalDurationMin
+#     ws.cell(row=i+3, column=7).value = activitySequences[indexFilesTrain[i]].totalDurationMax
+#     #using NN_Model results
+#     ws.cell(row=i + 3, column=8).value = activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
+#     ws.cell(row=i + 3, column=9).value = activitySequences[indexFilesTrain[i]].totalDurationWithCriticalResource
+#
+# for i in range(numberOfFilesTest):
+#     ws.cell(row=i + 3, column=10).value = activitySequences[indexFilesTest[i]].fileName[:-4]
+#     ws.cell(row=i + 3, column=11).value = activitySequences[indexFilesTest[i]].totalDurationMean
+#     ws.cell(row=i + 3, column=12).value = activitySequences[indexFilesTest[i]].totalDurationStandardDeviation
+#     ws.cell(row=i + 3, column=13).value = activitySequences[indexFilesTest[i]].totalDurationMin
+#     ws.cell(row=i + 3, column=14).value = activitySequences[indexFilesTest[i]].totalDurationMax
+#     # using NN_Model results
+#     ws.cell(row=i + 3, column=15).value = activitySequences[indexFilesTest[i]].totalDurationWithPolicy
+#     ws.cell(row=i + 3, column=16).value = activitySequences[indexFilesTest[i]].totalDurationWithCriticalResource
+#
+# ws.cell(row=2, column=17).value = sumTotalDurationRandomTrain
+# ws.cell(row=2, column=18).value = sumTotalDurationWithNeuralNetworkModelTrain
+# ws.cell(row=2, column=19).value = sumtotalDurationWithCriticalResourceTrain
+# ws.cell(row=2, column=20).value = sumTotalDurationRandomTest
+# ws.cell(row=2, column=21).value = sumTotalDurationWithNeuralNetworkModelTest
+# ws.cell(row=2, column=22).value = sumtotalDurationWithCriticalResourceTest
+#
+#
+# ws.cell(row=4, column=1).value = round(t_computation,2)
+#
+# wb.save(relativePath + "/database_480/test_futureResource2.xlsx")
 
 
 
