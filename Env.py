@@ -50,6 +50,7 @@ class activitySequence:
         self.totalDurationWithPolicy = None
         self.totalDurationWithCriticalResource = None
         self.totalDurationWithShortestProcessingTime = None
+        self.totalDurationWithShortestSumDuration = None
         self.trivialDecisionPercentageMean = None
 
 
@@ -248,18 +249,34 @@ def runSimulation(runSimulation_input):
             else:
                 if policyType == "shortest processing time":
                     # find the shortest duration activity to start
+                    resourceConversionVector = list(range(0, numberOfResources))  # resource dosen't matter
                     durationForReadyToStartActivities = [0] * numberOfActivitiesInStateVector
 
                     for i in range(len(indexReadyToStartActivitiesInState)):
                         durationForReadyToStartActivities[i] = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].time
 
-
                     indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
                     indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
                     indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(durationForReadyToStartActivities, indexActivitiesGlobal), reverse=False)]
                     activityConversionVector = indexActivitiesGlobal_reordered
-                    resourceConversionVector = list(range(0,numberOfResources))
 
+
+                elif policyType == "shortest sumDuration including successor":
+                    # find the shortest sum duration including successor to start
+                    resourceConversionVector = list(range(0, numberOfResources))# resource dosen't matter
+
+                    totalDurationIncludeSuccessor = [0] * numberOfActivitiesInStateVector
+                    for i in range(len(indexReadyToStartActivitiesInState)):
+                        successorActivities = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].indexFollowingActivities
+                        totalDurationforSuccessor = 0
+                        for value in successorActivities:
+                            totalDurationforSuccessor += currentActivitySequence.activities[value].time
+                        totalDurationIncludeSuccessor[i] = currentActivitySequence.activities[indexReadyToStartActivitiesInState[i]].time + totalDurationforSuccessor
+
+                    indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
+                    indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
+                    indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(totalDurationIncludeSuccessor, indexActivitiesGlobal), reverse=True)]
+                    activityConversionVector = indexActivitiesGlobal_reordered
 
                 else:
                     # find most critical resources (i.e. required resources to start the ready to start activities normalized by the total resources)
@@ -309,7 +326,6 @@ def runSimulation(runSimulation_input):
                 for j in range(numberOfResources):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
 
-                #print('currentState_readyToStartActivitie',currentState_readyToStartActivities)
 
                 # 1.4.1 add future resourceUtilisation for active activities
                 indexReadyToActiveActivities = []
@@ -317,7 +333,7 @@ def runSimulation(runSimulation_input):
                 # for i in range(numberOfActivities):
                 #     if currentActivitySequence.activities[i].withToken and currentActivitySequence.activities[i].idleToken == False:
                 #         indexAlreadyStartedActivities.append(i)
-                # print('indexAlreadyStartedActivities',indexAlreadyStartedActivities)
+
                 #
                 # #add already started activities in indexStartToActiveActivities
                 # for j in indexAlreadyStartedActivities:
@@ -385,7 +401,7 @@ def runSimulation(runSimulation_input):
                         if index + maximaltimeHorizon > 10:
                             index = timeHorizon - maximaltimeHorizon
                             timeHorizonMatrixforFollowing[0][maximaltimeHorizon:index] = 1
-                    #print('timeHorizonMatrixforFollowing',timeHorizonMatrixforFollowing)
+
 
                     # generate resourceUtilizationMatrix for following activities
                     resourcematrixforFollowing = np.zeros((1, numberOfResources))
@@ -451,14 +467,14 @@ def runSimulation(runSimulation_input):
 
                     priorityValues = outputNeuralNetworkModel[0]
 
-                    #print('priorityValues:',priorityValues)
-
                 elif policyType == "most critical resource":
                     priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
 
                 elif policyType == "shortest processing time":
                     priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
 
+                elif policyType == "shortest sumDuration including successor":
+                    priorityValues = [1, 0.8, 0.6, 0.4, 0.2, 0]
 
                 else:
                     print("policy name not existing")

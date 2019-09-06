@@ -58,10 +58,12 @@ sumTotalDurationRandomTestRecord = []
 sumTotalDurationWithNeuralNetworkModelTestRecord = []
 sumTotalDurationWithCriticalResourceTestRecord = []
 sumTotalDurationWithShortestProcessingTestRecord = []
+sumTotalDurationWithShortestSumDurationTestRecord = []
 sumTotalDurationRandomTrainRecord = []
 sumTotalDurationWithNeuralNetworkModelTrainRecord = []
 sumTotalDurationWithCriticalResourceTrainRecord = []
 sumTotalDurationWithShortestProcessingTrainRecord = []
+sumTotalDurationWithShortestSumDurationTrainRecord = []
 
 # read all activity sequences from database
 absolutePathProjectsGlob = absolutePathProjects + "*.txt"
@@ -414,51 +416,118 @@ for i in range(numberOfFilesTest):
 
     activitySequences[indexFilesTest[i]].totalDurationWithShortestProcessingTime = currentRunSimulation_output.totalDurationMean
 
+
+# ---------------------------------------------------------shortest sumDuration including successor----------------------------------------------------------------------------
+####  TEST SHORTEST SUMDURATION INCLUDING SUCCESSOR METHOD ON TRAIN ACTIVITY SEQUENCES  ####
+print('###### SHORTEST SUMDURATION INCLUDING SUCCESSOR METHOD ON TRAIN ACTIVITY SEQUENCES  ######')
+runSimulation_inputs = []
+for i in range(numberOfFilesTrain):
+    currentRunSimulation_input = runSimulation_input()
+    currentRunSimulation_input.activitySequence = activitySequences[indexFilesTrain[i]]
+    currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+    currentRunSimulation_input.timeDistribution = timeDistribution
+    currentRunSimulation_input.purpose = "testPolicy"
+    currentRunSimulation_input.randomDecisionProbability = 0
+    currentRunSimulation_input.policyType = "shortest sumDuration including successor"
+    currentRunSimulation_input.decisionTool = None
+    currentRunSimulation_input.numberOfResources = numberOfResources
+    currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+    currentRunSimulation_input.stateVectorLength = stateVectorLength
+    currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+    currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+    currentRunSimulation_input.numberOfActivities = numberOfActivities
+    currentRunSimulation_input.timeHorizon = timeHorizon
+
+    runSimulation_inputs.append(currentRunSimulation_input)
+
+pool = mp.Pool(processes=numberOfCpuProcessesToGenerateData)
+
+runSimulation_outputs = pool.map(runSimulation, runSimulation_inputs)
+# assign simulation results to activity sequences
+for i in range(numberOfFilesTrain):
+    activitySequences[indexFilesTrain[i]].totalDurationWithShortestSumDuration = runSimulation_outputs[i].totalDurationMean
+
+####  TEST SHORTEST SUMDURATION INCLUDING SUCCESSOR TIME METHOD ON TEST ACTIVITY SEQUENCES  ####
+print('###### SHORTEST SUMDURATION INCLUDING SUCCESSOR METHOD ON TEST ACTIVITY SEQUENCES  ######')
+for i in range(numberOfFilesTest):
+    currentRunSimulation_input = runSimulation_input()
+    currentRunSimulation_input.activitySequence = activitySequences[indexFilesTest[i]]
+    currentRunSimulation_input.numberOfSimulationRuns = numberOfSimulationRunsToTestPolicy
+    currentRunSimulation_input.timeDistribution = timeDistribution
+    currentRunSimulation_input.purpose = "testPolicy"
+    currentRunSimulation_input.randomDecisionProbability = 0
+    currentRunSimulation_input.policyType = "shortest sumDuration including successor"
+    currentRunSimulation_input.decisionTool = None
+    currentRunSimulation_input.numberOfResources = numberOfResources
+    currentRunSimulation_input.numberOfActivitiesInStateVector = numberOfActivitiesInStateVector
+    currentRunSimulation_input.stateVectorLength = stateVectorLength
+    currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
+    currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
+    currentRunSimulation_input.numberOfActivities = numberOfActivities
+    currentRunSimulation_input.timeHorizon = timeHorizon
+
+    currentRunSimulation_output = runSimulation(currentRunSimulation_input)
+
+    activitySequences[indexFilesTest[i]].totalDurationWithShortestSumDuration = currentRunSimulation_output.totalDurationMean
+
+
 # ------------------------------------------------------EVALUATION-----------------------------------------------------------------------------
 ####  EVALUATION OF RESULTS OF TRAIN ACTIVITY SEQUENCES  ####
 sumTotalDurationRandomTrain = 0
 sumTotalDurationWithCriticalResourceTrain = 0
 sumTotalDurationWithShortestProcessingTrain = 0
 sumTotalDurationWithNeuralNetworkModelTrain = 0
+sumTotalDurationWithShortestSumDurationTrain = 0
 
 for i in range(numberOfFilesTrain):
     sumTotalDurationRandomTrain += activitySequences[indexFilesTrain[i]].totalDurationMean
-    sumTotalDurationRandomTrain = round(sumTotalDurationRandomTrain, 4)
+    sumTotalDurationRandomTrain = round(sumTotalDurationRandomTrain,4)
     sumTotalDurationWithNeuralNetworkModelTrain += activitySequences[indexFilesTrain[i]].totalDurationWithPolicy
     sumTotalDurationWithCriticalResourceTrain += activitySequences[indexFilesTrain[i]].totalDurationWithCriticalResource
     sumTotalDurationWithShortestProcessingTrain += activitySequences[indexFilesTrain[i]].totalDurationWithShortestProcessingTime
+    sumTotalDurationWithShortestSumDurationTrain += activitySequences[indexFilesTrain[i]].totalDurationWithShortestSumDuration
 
 sumTotalDurationRandomTrainRecord.append(sumTotalDurationRandomTrain)
 sumTotalDurationWithNeuralNetworkModelTrainRecord.append(sumTotalDurationWithNeuralNetworkModelTrain)
 sumTotalDurationWithCriticalResourceTrainRecord.append(sumTotalDurationWithCriticalResourceTrain)
 sumTotalDurationWithShortestProcessingTrainRecord.append(sumTotalDurationWithShortestProcessingTrain)
+sumTotalDurationWithShortestSumDurationTrainRecord.append(sumTotalDurationWithShortestSumDurationTrain)
 
 ####  EVALUATION OF NN RESULTS OF TEST ACTIVITY SEQUENCES  ####
 sumTotalDurationRandomTest = 0
 sumTotalDurationWithNeuralNetworkModelTest = 0
 sumTotalDurationWithCriticalResourceTest = 0
 sumTotalDurationWithShortestProcessingTest = 0
+sumTotalDurationWithShortestSumDurationTest = 0
 
 for i in range(numberOfFilesTest):
     sumTotalDurationRandomTest += activitySequences[indexFilesTest[i]].totalDurationMean
-    sumTotalDurationRandomTest = round(sumTotalDurationRandomTest, 4)
+    sumTotalDurationRandomTest = round(sumTotalDurationRandomTest,4)
     sumTotalDurationWithNeuralNetworkModelTest += activitySequences[indexFilesTest[i]].totalDurationWithPolicy
     sumTotalDurationWithCriticalResourceTest += activitySequences[indexFilesTest[i]].totalDurationWithCriticalResource
     sumTotalDurationWithShortestProcessingTest += activitySequences[indexFilesTest[i]].totalDurationWithShortestProcessingTime
+    sumTotalDurationWithShortestSumDurationTest += activitySequences[indexFilesTest[i]].totalDurationWithShortestSumDuration
+
 
 sumTotalDurationRandomTestRecord.append(sumTotalDurationRandomTest)
 sumTotalDurationWithNeuralNetworkModelTestRecord.append(sumTotalDurationWithNeuralNetworkModelTest)
 sumTotalDurationWithCriticalResourceTestRecord.append(sumTotalDurationWithCriticalResourceTest)
 sumTotalDurationWithShortestProcessingTestRecord.append(sumTotalDurationWithShortestProcessingTest)
+sumTotalDurationWithShortestSumDurationTestRecord.append(sumTotalDurationWithShortestSumDurationTest)
+
+
 
 print("sumTotalDurationRandomTrain = " + str(sumTotalDurationRandomTrain))
 print("sumTotalDurationWithNeuralNetworkModelTrain = " + str(sumTotalDurationWithNeuralNetworkModelTrain))
 print("sumTotalDurationWithCriticalResourceTrain = " + str(sumTotalDurationWithCriticalResourceTrain))
 print("sumTotalDurationWithShortestProcessingTrain = " + str(sumTotalDurationWithShortestProcessingTrain))
+print("sumTotalDurationWithShortestSumDurationTrain = " + str(sumTotalDurationWithShortestSumDurationTrain))
 print("sumTotalDurationRandomTest = " + str(sumTotalDurationRandomTest))
 print("sumTotalDurationWithNeuralNetworkModelTest = " + str(sumTotalDurationWithNeuralNetworkModelTest))
 print("sumTotalDurationWithCriticalResourceTest = " + str(sumTotalDurationWithCriticalResourceTest))
 print("sumTotalDurationWithShortestProcessingTest = " + str(sumTotalDurationWithShortestProcessingTest))
+print("sumTotalDurationWithShortestSumDurationTest = " + str(sumTotalDurationWithShortestSumDurationTest))
+
 
 # compute computation time
 t_end = time.time()
