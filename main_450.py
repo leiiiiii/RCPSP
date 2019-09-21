@@ -25,17 +25,17 @@ maxTasksPerChildToGenerateData = 4        # 4 is the best for paoloPC
 # input state vector  parameters
 numberOfActivitiesInStateVector = 6
 rescaleFactorTime = 0.1
-#timeHorizon = 10
+timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =2000
+numberOfSimulationRunsToGenerateData =5
 numberOfSimulationRunsToTestPolicy = 1
 
 # train parameters
 percentageOfFilesTest = 0.1
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 20 #walk entire samples
+numberOfEpochs = 20#walk entire samples
 learningRate = 0.0005
 
 # paths
@@ -70,21 +70,21 @@ absolutePathProjectsGlob = absolutePathProjects + "*.txt"
 files = sorted(glob.glob(absolutePathProjectsGlob))
 
 # divide all activity sequences in training and test set
-numberOfFiles = len(files)
-numberOfFilesTest = round(numberOfFiles * percentageOfFilesTest)
-numberOfFilesTrain = numberOfFiles - numberOfFilesTest
+numberOfFiles = len(files) #450
+numberOfFilesTest = round(numberOfFiles * percentageOfFilesTest) #45
+numberOfFilesTrain = numberOfFiles - numberOfFilesTest #405
 indexFiles = list(range(0, numberOfFiles))
 indexFilesTrain = []
 indexFilesTest = []
 
 
 # choose the first element of every set to test
-for i in range(numberOfFilesTest):
-    # randomIndex = random.randrange(0, len(indexFiles))
-    randomIndex = i*9
-    indexFilesTest.append(indexFiles[randomIndex])
-    del indexFiles[randomIndex]#delete
-indexFilesTrain = indexFiles
+for i in range(1,numberOfFilesTest+1):
+    indexFilesTest.append(indexFiles[i*10-1])
+
+for i in indexFiles:
+    if i not in indexFilesTest:
+        indexFilesTrain.append(i)
 
 # organize the read activity sequences in classes
 for i in range(numberOfFiles):
@@ -151,8 +151,8 @@ for i in range(numberOfFiles):
                 currentActivitySequence.activities[IndexFollowingActivity].numberOfPreviousActivities += 1
     activitySequences.append(currentActivitySequence)
 
-#stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources+ timeHorizon * numberOfResources
-stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources
+stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources+ timeHorizon * numberOfResources
+#stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources
 
 # compute decisions: each decision corresponds to a start of an activity in the local reference system (more than one decision can be taken at once)
 for i in range(0,numberOfActivitiesInStateVector):
@@ -178,7 +178,7 @@ for i in range(numberOfFilesTrain):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -241,7 +241,7 @@ for i in range(numberOfFilesTest):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -278,7 +278,7 @@ for i in range(numberOfFilesTrain):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -304,7 +304,7 @@ for i in range(numberOfFilesTest):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -329,7 +329,7 @@ for i in range(numberOfFilesTrain):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -357,7 +357,7 @@ for i in range(numberOfFilesTest):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -382,7 +382,7 @@ for i in range(numberOfFilesTrain):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -410,7 +410,7 @@ for i in range(numberOfFilesTest):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 
@@ -436,7 +436,7 @@ for i in range(numberOfFilesTrain):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     runSimulation_inputs.append(currentRunSimulation_input)
 
@@ -464,7 +464,7 @@ for i in range(numberOfFilesTest):
     currentRunSimulation_input.decisions_indexActivity = decisions_indexActivity
     currentRunSimulation_input.rescaleFactorTime = rescaleFactorTime
     currentRunSimulation_input.numberOfActivities = numberOfActivities
-    #currentRunSimulation_input.timeHorizon = timeHorizon
+    currentRunSimulation_input.timeHorizon = timeHorizon
 
     currentRunSimulation_output = runSimulation(currentRunSimulation_input)
 

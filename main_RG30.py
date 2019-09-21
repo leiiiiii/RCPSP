@@ -28,14 +28,15 @@ rescaleFactorTime = 0.1
 timeHorizon = 10
 
 # random generation parameters
-numberOfSimulationRunsToGenerateData =2000
+numberOfSimulationRunsToGenerateData =3
 numberOfSimulationRunsToTestPolicy = 1
 
 # train parameters
-percentageOfFilesTest = 0.1
+
 importExistingNeuralNetworkModel = False
 neuralNetworkModelAlreadyExists = False
-numberOfEpochs = 50 #walk entire samples
+numberOfEpochs = 3#walk entire samples
+
 learningRate = 0.0005
 
 # paths
@@ -70,21 +71,21 @@ absolutePathProjectsGlob = absolutePathProjects + "*.txt"
 files = sorted(glob.glob(absolutePathProjectsGlob))
 
 # divide all activity sequences in training and test set
-numberOfFiles = len(files)
-numberOfFilesTest = round(numberOfFiles * percentageOfFilesTest)
-numberOfFilesTrain = numberOfFiles - numberOfFilesTest
+numberOfFiles = len(files) #4545
+numberOfFilesTest = 45 #45
+numberOfFilesTrain = numberOfFiles - numberOfFilesTest #4500
 indexFiles = list(range(0, numberOfFiles))
 indexFilesTrain = []
 indexFilesTest = []
 
 
-# choose the first element of every set to test
+# choose the last 45 element to test
 for i in range(numberOfFilesTest):
-    # randomIndex = random.randrange(0, len(indexFiles))
-    randomIndex = i*9
-    indexFilesTest.append(indexFiles[randomIndex])
-    del indexFiles[randomIndex]#delete
-indexFilesTrain = indexFiles
+    indexFilesTest.append(indexFiles[numberOfFilesTrain+i])
+
+for i in indexFiles:
+    if i not in indexFilesTest:
+        indexFilesTrain.append(i)
 
 # organize the read activity sequences in classes
 for i in range(numberOfFiles):
@@ -152,7 +153,7 @@ for i in range(numberOfFiles):
     activitySequences.append(currentActivitySequence)
 
 stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources+ timeHorizon * numberOfResources
-#print(stateVectorLength)
+#stateVectorLength = numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources
 
 # compute decisions: each decision corresponds to a start of an activity in the local reference system (more than one decision can be taken at once)
 for i in range(0,numberOfActivitiesInStateVector):
