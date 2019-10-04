@@ -127,7 +127,7 @@ def runSimulation(runSimulation_input):
     decisions_indexActivity = runSimulation_input.decisions_indexActivity
     rescaleFactorTime = runSimulation_input.rescaleFactorTime
     numberOfActivities = runSimulation_input.numberOfActivities
-    timeHorizon = runSimulation_input.timeHorizon
+    #timeHorizon = runSimulation_input.timeHorizon
 
     # print("start " + str(currentActivitySequence.fileName[:-4]))
     # print('------------------------------------------------------------------------------------------')
@@ -257,7 +257,7 @@ def runSimulation(runSimulation_input):
 
                     indexActivitiesGlobal = [-1] * numberOfActivitiesInStateVector
                     indexActivitiesGlobal[0:len(indexReadyToStartActivitiesInState)] = indexReadyToStartActivitiesInState
-                    indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(durationForReadyToStartActivities, indexActivitiesGlobal), reverse=False)]
+                    indexActivitiesGlobal_reordered = [x for _, x in sorted(zip(durationForReadyToStartActivities, indexActivitiesGlobal), reverse=True)]
                     activityConversionVector = indexActivitiesGlobal_reordered
 
 
@@ -327,115 +327,115 @@ def runSimulation(runSimulation_input):
                     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + j] = currentActivitySequence.availableResources[resourceConversionVector[j]] / currentActivitySequence.totalResources[resourceConversionVector[j]]
 
 
-                # 1.4.1 add future resourceUtilisation for active activities
-                indexReadyToActiveActivities = []
-                # indexAlreadyStartedActivities=[]
-                # for i in range(numberOfActivities):
-                #     if currentActivitySequence.activities[i].withToken and currentActivitySequence.activities[i].idleToken == False:
-                #         indexAlreadyStartedActivities.append(i)
-
+                # # 1.4.1 add future resourceUtilisation for active activities
+                # indexReadyToActiveActivities = []
+                # # indexAlreadyStartedActivities=[]
+                # # for i in range(numberOfActivities):
+                # #     if currentActivitySequence.activities[i].withToken and currentActivitySequence.activities[i].idleToken == False:
+                # #         indexAlreadyStartedActivities.append(i)
                 #
-                # #add already started activities in indexStartToActiveActivities
-                # for j in indexAlreadyStartedActivities:
-                #     indexStartToActiveActivities.append(j)
-
-                #add ready to start activities in indexStartToActiveActivities
-                for n in indexReadyToStartActivitiesInState:
-                    indexReadyToActiveActivities.append(n)
-
-                # generate timeHorizonMatrix for ReadytoActive activities
-                timeHorizonMatrix = np.zeros((len(indexReadyToActiveActivities), timeHorizon))
-                timeUnitmatrix = [x for x in range(len(indexReadyToActiveActivities))]
-                remainingtimeList = []
-                for i in indexReadyToActiveActivities:
-                    remainingtimeList.append(currentActivitySequence.activities[i].remainingTime)
-                for value in remainingtimeList:
-                    if value > timeHorizon:
-                        value = timeHorizon
-                maximaltimeHorizon = max(remainingtimeList)
-                for (i, j) in zip(timeUnitmatrix, remainingtimeList):
-                    timeHorizonMatrix[i][0:j] = 1
-
-
-                # generate resourceUtilizationMatrix for ReadytoActive activities
-                resourcematrix = np.zeros((1, numberOfResources))
-
-                for i in indexReadyToActiveActivities:
-                    a = [currentActivitySequence.activities[i].requiredResources]
-                    resourcematrix = np.concatenate((resourcematrix, a), axis=0)
-                resourcematrix = resourcematrix[1:]
-                resourceUtilizationMatrix = resourcematrix.T
-
-                # currentState_futureResourceUtilisation for ReadytoActive activity generated
-                currentState_futureResourceUtilisation_forActive = np.dot(resourceUtilizationMatrix, timeHorizonMatrix)
-
-
-                # 1.4.2 add future resourceUtilisation for following activities
-                for i in indexReadyToActiveActivities:
-                    indexFollowingActivities = currentActivitySequence.activities[i].indexFollowingActivities
-
-                # generate timeHorizonMatrix for following activities (timeHorizon starts maximaltimeHorizon)
-
-                if len(indexFollowingActivities)==0:
-                    currentState_futureResourceUtilisation_forFollowing = np.zeros((numberOfResources,timeHorizon))
-
-                else:
-                    timeHorizonMatrixforFollowing = np.zeros((len(indexFollowingActivities), timeHorizon))
-
-                    if len(indexFollowingActivities) > 1:
-                        timeUnitmatrixforFollowing = [x for x in range(len(indexFollowingActivities))]
-                        timeListforFollowing = []
-                        for i in indexFollowingActivities:
-                            timeListforFollowing.append(currentActivitySequence.activities[i].time)
-
-                        for value in timeListforFollowing:
-                            if value + maximaltimeHorizon > timeHorizon:
-                                value = timeHorizon - maximaltimeHorizon
-
-                        for (i, j) in zip(timeUnitmatrixforFollowing, timeListforFollowing):
-                            timeHorizonMatrixforFollowing[i][maximaltimeHorizon:j] = 1
-
-                    else:
-                        for i in indexFollowingActivities:
-                            index = currentActivitySequence.activities[i].time
-                        if index + maximaltimeHorizon > 10:
-                            index = timeHorizon - maximaltimeHorizon
-                            timeHorizonMatrixforFollowing[0][maximaltimeHorizon:index] = 1
-
-
-                    # generate resourceUtilizationMatrix for following activities
-                    resourcematrixforFollowing = np.zeros((1, numberOfResources))
-                    if len(indexFollowingActivities) > 1:
-                        for i in indexFollowingActivities:
-                            a = [currentActivitySequence.activities[i].requiredResources]
-                            resourcematrixforFollowing = np.concatenate((resourcematrixforFollowing, a), axis=0)
-                        resourcematrixforFollowing = resourcematrixforFollowing[1:]
-                        resourceUtilizationMatrixforFollowing = resourcematrixforFollowing.T
-
-                    elif len(indexFollowingActivities) == 1:
-                        for i in indexFollowingActivities:
-                            currentActivitySequence.activities[i].requiredResources = np.array(currentActivitySequence.activities[i].requiredResources)
-                            resourceUtilizationMatrixforFollowing = currentActivitySequence.activities[i].requiredResources.reshape((numberOfResources, 1))
-
-                # currentState_futureResourceUtilisation for following activities generated
-                    currentState_futureResourceUtilisation_forFollowing = np.dot(resourceUtilizationMatrixforFollowing,timeHorizonMatrixforFollowing)
-
-                currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation_forActive,currentState_futureResourceUtilisation_forFollowing)
-
-                for i in range(numberOfResources):
-                    for j in range(timeHorizon):
-                        currentState_futureResourceUtilisation[i][j]=currentState_futureResourceUtilisation[i][j]/currentActivitySequence.totalResources[i]
-
-
-                resourceConversionVector = np.array(resourceConversionVector)
-
-                currentState_futureResourceUtilisation = currentState_futureResourceUtilisation[resourceConversionVector]
-
-                currentStateFuturnResourceUtilisation = currentState_futureResourceUtilisation.flatten()
-
-
-                for i in range(timeHorizon*numberOfResources):
-                    currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources + i]=currentStateFuturnResourceUtilisation[i]
+                # #
+                # # #add already started activities in indexStartToActiveActivities
+                # # for j in indexAlreadyStartedActivities:
+                # #     indexStartToActiveActivities.append(j)
+                #
+                # #add ready to start activities in indexStartToActiveActivities
+                # for n in indexReadyToStartActivitiesInState:
+                #     indexReadyToActiveActivities.append(n)
+                #
+                # # generate timeHorizonMatrix for ReadytoActive activities
+                # timeHorizonMatrix = np.zeros((len(indexReadyToActiveActivities), timeHorizon))
+                # timeUnitmatrix = [x for x in range(len(indexReadyToActiveActivities))]
+                # remainingtimeList = []
+                # for i in indexReadyToActiveActivities:
+                #     remainingtimeList.append(currentActivitySequence.activities[i].remainingTime)
+                # for value in remainingtimeList:
+                #     if value > timeHorizon:
+                #         value = timeHorizon
+                # maximaltimeHorizon = max(remainingtimeList)
+                # for (i, j) in zip(timeUnitmatrix, remainingtimeList):
+                #     timeHorizonMatrix[i][0:j] = 1
+                #
+                #
+                # # generate resourceUtilizationMatrix for ReadytoActive activities
+                # resourcematrix = np.zeros((1, numberOfResources))
+                #
+                # for i in indexReadyToActiveActivities:
+                #     a = [currentActivitySequence.activities[i].requiredResources]
+                #     resourcematrix = np.concatenate((resourcematrix, a), axis=0)
+                # resourcematrix = resourcematrix[1:]
+                # resourceUtilizationMatrix = resourcematrix.T
+                #
+                # # currentState_futureResourceUtilisation for ReadytoActive activity generated
+                # currentState_futureResourceUtilisation_forActive = np.dot(resourceUtilizationMatrix, timeHorizonMatrix)
+                #
+                #
+                # # 1.4.2 add future resourceUtilisation for following activities
+                # for i in indexReadyToActiveActivities:
+                #     indexFollowingActivities = currentActivitySequence.activities[i].indexFollowingActivities
+                #
+                # # generate timeHorizonMatrix for following activities (timeHorizon starts maximaltimeHorizon)
+                #
+                # if len(indexFollowingActivities)==0:
+                #     currentState_futureResourceUtilisation_forFollowing = np.zeros((numberOfResources,timeHorizon))
+                #
+                # else:
+                #     timeHorizonMatrixforFollowing = np.zeros((len(indexFollowingActivities), timeHorizon))
+                #
+                #     if len(indexFollowingActivities) > 1:
+                #         timeUnitmatrixforFollowing = [x for x in range(len(indexFollowingActivities))]
+                #         timeListforFollowing = []
+                #         for i in indexFollowingActivities:
+                #             timeListforFollowing.append(currentActivitySequence.activities[i].time)
+                #
+                #         for value in timeListforFollowing:
+                #             if value + maximaltimeHorizon > timeHorizon:
+                #                 value = timeHorizon - maximaltimeHorizon
+                #
+                #         for (i, j) in zip(timeUnitmatrixforFollowing, timeListforFollowing):
+                #             timeHorizonMatrixforFollowing[i][maximaltimeHorizon:j] = 1
+                #
+                #     else:
+                #         for i in indexFollowingActivities:
+                #             index = currentActivitySequence.activities[i].time
+                #         if index + maximaltimeHorizon > 10:
+                #             index = timeHorizon - maximaltimeHorizon
+                #             timeHorizonMatrixforFollowing[0][maximaltimeHorizon:index] = 1
+                #
+                #
+                #     # generate resourceUtilizationMatrix for following activities
+                #     resourcematrixforFollowing = np.zeros((1, numberOfResources))
+                #     if len(indexFollowingActivities) > 1:
+                #         for i in indexFollowingActivities:
+                #             a = [currentActivitySequence.activities[i].requiredResources]
+                #             resourcematrixforFollowing = np.concatenate((resourcematrixforFollowing, a), axis=0)
+                #         resourcematrixforFollowing = resourcematrixforFollowing[1:]
+                #         resourceUtilizationMatrixforFollowing = resourcematrixforFollowing.T
+                #
+                #     elif len(indexFollowingActivities) == 1:
+                #         for i in indexFollowingActivities:
+                #             currentActivitySequence.activities[i].requiredResources = np.array(currentActivitySequence.activities[i].requiredResources)
+                #             resourceUtilizationMatrixforFollowing = currentActivitySequence.activities[i].requiredResources.reshape((numberOfResources, 1))
+                #
+                # # currentState_futureResourceUtilisation for following activities generated
+                #     currentState_futureResourceUtilisation_forFollowing = np.dot(resourceUtilizationMatrixforFollowing,timeHorizonMatrixforFollowing)
+                #
+                # currentState_futureResourceUtilisation = np.add(currentState_futureResourceUtilisation_forActive,currentState_futureResourceUtilisation_forFollowing)
+                #
+                # for i in range(numberOfResources):
+                #     for j in range(timeHorizon):
+                #         currentState_futureResourceUtilisation[i][j]=currentState_futureResourceUtilisation[i][j]/currentActivitySequence.totalResources[i]
+                #
+                #
+                # resourceConversionVector = np.array(resourceConversionVector)
+                #
+                # currentState_futureResourceUtilisation = currentState_futureResourceUtilisation[resourceConversionVector]
+                #
+                # currentStateFuturnResourceUtilisation = currentState_futureResourceUtilisation.flatten()
+                #
+                #
+                # for i in range(timeHorizon*numberOfResources):
+                #     currentState_readyToStartActivities[numberOfActivitiesInStateVector + numberOfActivitiesInStateVector * numberOfResources + numberOfResources + i]=currentStateFuturnResourceUtilisation[i]
 
 
             # 1.5 Use the policy and the decision tool to define which tokens can begin the correspondent activity or remain idle
